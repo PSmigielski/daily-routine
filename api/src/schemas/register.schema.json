@@ -1,0 +1,25 @@
+{
+    "type": "object",
+    "properties": {
+        "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 100
+        },
+        "login": {
+            "type": "string",
+            "maxLength": 100
+        },
+        "password": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 150
+        }
+    },
+    "required": [
+        "email",
+        "login",
+        "password"
+    ],
+    "additionalProperties": false
+}
