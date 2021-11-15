@@ -12,5 +12,10 @@ class AuthController {
             return res.json(data);
         }
     }
+    public async verify(req: Request, res: Response, next: NextFunction) {
+        const { id } = req.params;
+        await User.verify(id).catch(next);
+        res.status(202).json({ message: "User has been verified successfully" })
+    }
 }
 export default AuthController;

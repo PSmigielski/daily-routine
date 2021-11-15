@@ -1,8 +1,8 @@
 import { PrismaClient } from ".prisma/client";
 
 class Model {
-    private prisma: PrismaClient = new PrismaClient();
-    protected getPrisma() {
+    private static prisma: PrismaClient = new PrismaClient();
+    protected static getPrisma() {
         return this.prisma;
     }
 }

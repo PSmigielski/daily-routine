@@ -20,7 +20,7 @@ class MailerService {
             to: email,
             subject: "Verify your account",
             html: `<h1>Hi!</h1>
-            <p> To verify your email, please visit the following <a href="http://localhost:4000/v1/auth/verify/${request.id}" >link</a></p>
+            <p> To verify your email, please visit the following <a href="http://localhost:4000/v1/api/auth/verify${request.id}" >link</a></p>
             <br><p> Cheers! </p>`,
         });
     }

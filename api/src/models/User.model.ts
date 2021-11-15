@@ -15,7 +15,7 @@ class User extends Model {
         this.plainPassword = plainPassword;
     }
     public async createUser() {
-        const prisma = this.getPrisma();
+        const prisma = User.getPrisma();
         const salt = randomBytes(32).toString("hex"); //2chars at one byte
         const user = await prisma.user.create({
             data: {
@@ -36,6 +36,45 @@ class User extends Model {
             }
         })
         return user;
+    }
+    public static async verify(id: string) {
+        const prisma = User.getPrisma();
+
+        const request = await prisma.verifyRequest.findUnique({
+            where: {
+                id
+            }
+        }).catch(err => {
+            throw new ApiErrorException("request with this id does not exist", 404);
+        })
+        if (request) {
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: request?.userId
+                }
+            }).catch(err => {
+                throw new ApiErrorException("user with this id does not exist", 404);
+            })
+            await prisma.user.update({
+                where: {
+                    id: user?.id
+                },
+                data: {
+                    isVerified: true
+                },
+            }).catch(err => {
+                throw new ApiErrorException("user with this id does not exist", 404);
+            })
+            await prisma.verifyRequest.delete({
+                where: {
+                    id: request?.id
+                }
+            }).catch(err => {
+                throw new ApiErrorException("request with this id does not exist", 404);
+            })
+        } else {
+            throw new ApiErrorException("request with this id does not exist", 404);
+        }
     }
 }
 
