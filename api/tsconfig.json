@@ -3,8 +3,13 @@
         "target": "es6",
         "module": "commonjs",
         "outDir": "./dist",
+        "rootDir": "./src",
         "esModuleInterop": true,
-        "strict": true
+        "strict": true,
+        "typeRoots": [
+            "src/types",
+            "node_modules/@types"
+        ]
     },
     "include": [
         "src/**/*"
