@@ -14,8 +14,24 @@ class AuthController {
     }
     public async verify(req: Request, res: Response, next: NextFunction) {
         const { id } = req.params;
-        await User.verify(id).catch(next);
-        res.status(202).json({ message: "User has been verified successfully" })
+        const result = await User.verify(id).catch(next);
+        if (result) {
+            res.status(202).json({ message: "User has been verified successfully" })
+        }
+    }
+    public async login(req: Request, res: Response, next: NextFunction) {
+        const { login, password } = req.body;
+        const result = await User.login({ login, password }).catch(next);
+        if (result) {
+            const tokenExp: Date = new Date();
+            tokenExp.setTime(result.jwt.exp as number * 1000);
+            const refreshTokenExp = new Date()
+            refreshTokenExp.setTime(result.refreshToken.exp as number * 1000);
+            res
+                .cookie("BEARER", result.jwt.token, { httpOnly: true, expires: tokenExp })
+                .cookie("REFRESH_TOKEN", result.refreshToken, { httpOnly: true, expires: refreshTokenExp })
+                .status(200).json({ message: "user logged in" });
+        }
     }
 }
 export default AuthController;

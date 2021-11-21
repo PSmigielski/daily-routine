@@ -1,8 +1,10 @@
 import { Prisma } from '@prisma/client'
-import { randomBytes, scryptSync } from "crypto";
+import jwt from "jsonwebtoken";
+import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import ApiErrorException from "../Exceptions/ApiErrorException";
 import meta from '../types/meta';
 import Model from "./Model";
+import RefreshToken from './RefreshToken.model';
 
 class User extends Model {
     private login: string | undefined;
@@ -21,7 +23,7 @@ class User extends Model {
             data: {
                 email: this.email as string,
                 login: this.login as string,
-                password: `${salt}${scryptSync(this.plainPassword as string, salt, 64).toString("hex")}`
+                password: `${salt}:${scryptSync(this.plainPassword as string, salt, 64).toString("hex")}`
             }
         }).catch(err => {
             if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -36,6 +38,35 @@ class User extends Model {
             }
         })
         return user;
+    }
+    public static async login({ login, password }: { login: string, password: string }) {
+        const prisma = User.getPrisma();
+        const user = await prisma.user.findUnique({
+            where: { login }
+        })
+        if (!user) {
+            throw new ApiErrorException("Wrong credentials", 400);
+        }
+        if (!user.isVerified) {
+            throw new ApiErrorException("user is not verified go fuck yourself", 401);
+        }
+        const [salt, key] = user.password.split(":");
+        const hashedBuffer = scryptSync(password, salt, 64);
+        const keyBuffer = Buffer.from(key, 'hex');
+        const match = timingSafeEqual(hashedBuffer, keyBuffer);
+        if (!match) {
+            throw new ApiErrorException("Wrong credentials", 400);
+        }
+        const refreshToken = await new RefreshToken(user.id).createToken();
+        const token = jwt.sign({ id: user.id, login }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
+        const tokenData = jwt.decode(token);
+        const refreshTokenData = jwt.decode(refreshToken.token);
+        if (typeof tokenData != "string" && typeof refreshTokenData != "string") {
+            return {
+                jwt: { token, exp: tokenData?.exp },
+                refreshToken: { token: refreshToken.token, exp: refreshTokenData?.exp }
+            }
+        }
     }
     public static async verify(id: string) {
         const prisma = User.getPrisma();
@@ -52,8 +83,6 @@ class User extends Model {
                 where: {
                     id: request?.userId
                 }
-            }).catch(err => {
-                throw new ApiErrorException("user with this id does not exist", 404);
             })
             await prisma.user.update({
                 where: {
@@ -72,6 +101,7 @@ class User extends Model {
             }).catch(err => {
                 throw new ApiErrorException("request with this id does not exist", 404);
             })
+            return true;
         } else {
             throw new ApiErrorException("request with this id does not exist", 404);
         }

@@ -5,6 +5,7 @@ const errorHandler = (err: ApiErrorException | Error, req: Request, res: Respons
     if (res.headersSent) {
         return next(err);
     }
+    console.log(err?.stack);
     res.status(err instanceof ApiErrorException ? err.getCode() : 500).json({ error: err.message });
 }
 
