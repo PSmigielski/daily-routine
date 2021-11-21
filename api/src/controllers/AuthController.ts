@@ -33,5 +33,12 @@ class AuthController {
                 .status(200).json({ message: "user logged in" });
         }
     }
+    public async logout(req: Request, res: Response, next: NextFunction) {
+        const result = await User.logout(req.user as { id: string, login: string, iat: number, exp: number }, req.cookies.BEARER).catch(next);
+        if (result) {
+            req.user = undefined;
+            res.clearCookie("BEARER").clearCookie("REFRESH_TOKEN").status(202).json({ message: "user logged out successfully" });
+        }
+    }
 }
 export default AuthController;

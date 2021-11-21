@@ -58,7 +58,7 @@ class User extends Model {
             throw new ApiErrorException("Wrong credentials", 400);
         }
         const refreshToken = await new RefreshToken(user.id).createToken();
-        const token = jwt.sign({ id: user.id, login }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
+        const token = jwt.sign({ id: user.id, login, refTokenId: refreshToken.id }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
         const tokenData = jwt.decode(token);
         const refreshTokenData = jwt.decode(refreshToken.token);
         if (typeof tokenData != "string" && typeof refreshTokenData != "string") {
@@ -67,6 +67,33 @@ class User extends Model {
                 refreshToken: { token: refreshToken.token, exp: refreshTokenData?.exp }
             }
         }
+    }
+    public static async logout({ id }: { id: string, login: string }, token: string) {
+        const prisma = User.getPrisma();
+        const decoded = jwt.decode(token);
+        if (typeof decoded != "string") {
+            const refToken = await prisma.refreshToken.delete({
+                where: {
+                    id: decoded?.refTokenId
+                }
+            }).catch(err => {
+                if (err instanceof Prisma.PrismaClientKnownRequestError) {
+                    let message: string = "";
+                    let code: number = 500;
+                    switch (err.code) {
+                        case "P2025":
+                            message = `this refresh token does not exist`;
+                            code = 401;
+                            break;
+                        default:
+                            message = "can't login for some reason"
+                    }
+                    throw new ApiErrorException(message, code);
+                }
+            })
+            return true;
+        }
+        return false;
     }
     public static async verify(id: string) {
         const prisma = User.getPrisma();
