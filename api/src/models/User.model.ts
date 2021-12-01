@@ -133,6 +133,40 @@ class User extends Model {
             throw new ApiErrorException("request with this id does not exist", 404);
         }
     }
+    public static async refreshToken(token: string) {
+        const prisma = User.getPrisma();
+        const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+        if (typeof decoded != "string") {
+            const refTokens = await prisma.refreshToken.findMany({
+                where: {
+                    userId: decoded.id,
+                }
+            })
+            const refToken = refTokens.find(el => el.token == token)
+            if (refTokens.length === 0 || typeof refToken == "undefined") {
+                console.log("dupa");
+                throw new ApiErrorException("no refresh token found", 403);
+            } else {
+                console.log("dupa");
+                const user = await prisma.user.findUnique({
+                    where: {
+                        id: refToken?.userId
+                    },
+                    select: {
+                        login: true
+                    }
+                })
+                const newToken: string = jwt.sign({ id: decoded.id, login: user?.login, refTokenId: refToken?.id }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
+                const tokenData = jwt.decode(newToken);
+                if (typeof tokenData != "string") {
+                    return {
+                        token: newToken,
+                        exp: tokenData?.exp
+                    }
+                }
+            }
+        }
+    }
 }
 
 export default User;

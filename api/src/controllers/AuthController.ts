@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import ApiErrorException from "../Exceptions/ApiErrorException";
 import User from "../models/User.model";
 import MailerService from "../Services/MailerService";
 
@@ -16,7 +17,7 @@ class AuthController {
         const { id } = req.params;
         const result = await User.verify(id).catch(next);
         if (result) {
-            res.status(202).json({ message: "User has been verified successfully" })
+            return res.status(202).json({ message: "User has been verified successfully" })
         }
     }
     public async login(req: Request, res: Response, next: NextFunction) {
@@ -27,7 +28,7 @@ class AuthController {
             tokenExp.setTime(result.jwt.exp as number * 1000);
             const refreshTokenExp = new Date()
             refreshTokenExp.setTime(result.refreshToken.exp as number * 1000);
-            res
+            return res
                 .cookie("BEARER", result.jwt.token, { httpOnly: true, expires: tokenExp })
                 .cookie("REFRESH_TOKEN", result.refreshToken, { httpOnly: true, expires: refreshTokenExp })
                 .status(200).json({ message: "user logged in" });
@@ -37,7 +38,22 @@ class AuthController {
         const result = await User.logout(req.user as { id: string, login: string, iat: number, exp: number }, req.cookies.BEARER).catch(next);
         if (result) {
             req.user = undefined;
-            res.clearCookie("BEARER").clearCookie("REFRESH_TOKEN").status(202).json({ message: "user logged out successfully" });
+            return res.clearCookie("BEARER").clearCookie("REFRESH_TOKEN").status(202).json({ message: "user logged out successfully" });
+        }
+    }
+    public async refreshToken(req: Request, res: Response, next: NextFunction) {
+        if (req.cookies.REFRESH_TOKEN != undefined) {
+            //debug tjos shit
+            const newToken = await User.refreshToken(req.cookies.REFRESH_TOKEN.token).catch(next)
+            if (newToken !== undefined) {
+                const tokenExp: Date = new Date();
+                tokenExp.setTime(newToken?.exp as number * 1000);
+                return res
+                    .cookie("BEARER", newToken?.token, { httpOnly: true, expires: tokenExp })
+                    .status(200).json({ message: "token has been refreshed" });
+            }
+        } else {
+            next(new ApiErrorException("REFRESH_TOKEN cookie not found", 401))
         }
     }
 }
