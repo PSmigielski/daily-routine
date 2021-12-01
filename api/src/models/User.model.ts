@@ -165,6 +165,19 @@ class User extends Model {
             }
         }
     }
+    public static async getUserByEmail(email: string) {
+        const prisma = User.getPrisma();
+        const user = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        });
+        if (user == undefined) {
+            throw new ApiErrorException("User with this email does not exist!", 404);
+        } else {
+            return user;
+        }
+    }
 }
 
 export default User;

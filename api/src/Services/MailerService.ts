@@ -2,7 +2,7 @@ import { PrismaClient } from ".prisma/client";
 import nodemailer from "nodemailer";
 import IMailContent from "../types/IMailContent";
 class MailerService {
-    public static async sendMail({ email, id }: { email: string, id: string }, mailContent: IMailContent) {
+    public static async sendMail(mailContent: IMailContent) {
         const prisma: PrismaClient = new PrismaClient();
         let transporter = nodemailer.createTransport({
             service: "gmail",

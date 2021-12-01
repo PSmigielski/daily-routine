@@ -12,6 +12,7 @@ authRouter.post("/login", schemaValidator("/../../schemas/login.schema.json"), a
 authRouter.post("/logout", checkJwt, authController.logout.bind(authController));
 authRouter.get("/verify/:id", authController.verify.bind(authController));
 authRouter.post("/refresh", authController.refreshToken.bind(authController));
+authRouter.post("/forget", authController.sendResetRequest.bind(authController));
 
 
 export default authRouter;

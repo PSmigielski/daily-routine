@@ -1,4 +1,11 @@
 {
+    "ts-node": {
+        "files": true
+    },
+    "files": [
+        "src/index.ts",
+        "src/types/custom.d.ts"
+    ],
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",

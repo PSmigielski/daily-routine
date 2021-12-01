@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import ApiErrorException from "../Exceptions/ApiErrorException";
+import ResetPasswordRequest from "../models/ResetPasswordRequest";
 import User from "../models/User.model";
 import VerifyRequest from "../models/VerifyRequest.model";
 import MailerService from "../Services/MailerService";
@@ -12,7 +13,7 @@ class AuthController {
         if (data) {
             const request = await VerifyRequest.create(data.id).catch(next)
             if (request) {
-                MailerService.sendMail(data, {
+                MailerService.sendMail({
                     from: "Daily Routine",
                     to: email,
                     subject: "Verify your account",
@@ -65,6 +66,24 @@ class AuthController {
             }
         } else {
             next(new ApiErrorException("REFRESH_TOKEN cookie not found", 401))
+        }
+    }
+    public async sendResetRequest(req: Request, res: Response, next: NextFunction) {
+        const { email } = req.body;
+        const user = await User.getUserByEmail(email).catch(next);
+        if (user) {
+            const request = await ResetPasswordRequest.create(user.id).catch(next)
+            if (request) {
+                MailerService.sendMail({
+                    from: "Daily Routine",
+                    to: email,
+                    subject: "Reset your password",
+                    html: `<h1>Hi!</h1>
+                    <p> To reset your password, please visit the following <a href="http://localhost:4000/v1/api/auth/reset/${request.id}" >link</a></p>
+                    <br><p> Cheers! </p>`,
+                });
+                return res.json({ message: "reset request has been sent" });
+            }
         }
     }
 }
