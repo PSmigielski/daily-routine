@@ -144,10 +144,8 @@ class User extends Model {
             })
             const refToken = refTokens.find(el => el.token == token)
             if (refTokens.length === 0 || typeof refToken == "undefined") {
-                console.log("dupa");
                 throw new ApiErrorException("no refresh token found", 403);
             } else {
-                console.log("dupa");
                 const user = await prisma.user.findUnique({
                     where: {
                         id: refToken?.userId

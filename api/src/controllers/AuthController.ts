@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ApiErrorException from "../Exceptions/ApiErrorException";
 import User from "../models/User.model";
+import VerifyRequest from "../models/VerifyRequest.model";
 import MailerService from "../Services/MailerService";
 
 class AuthController {
@@ -9,8 +10,18 @@ class AuthController {
         const user = new User(email, login, password);
         const data = await user.createUser().catch(next);
         if (data) {
-            MailerService.sendVerificationMail(data);
-            return res.json(data);
+            const request = await VerifyRequest.create(data.id).catch(next)
+            if (request) {
+                MailerService.sendMail(data, {
+                    from: "Daily Routine",
+                    to: email,
+                    subject: "Verify your account",
+                    html: `<h1>Hi!</h1>
+                    <p> To verify your email, please visit the following <a href="http://localhost:4000/v1/api/auth/verify/${request.id}" >link</a></p>
+                    <br><p> Cheers! </p>`,
+                });
+                return res.json(data);
+            }
         }
     }
     public async verify(req: Request, res: Response, next: NextFunction) {
