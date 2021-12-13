@@ -13,7 +13,8 @@
         "password": {
             "type": "string",
             "minLength": 6,
-            "maxLength": 150
+            "maxLength": 100,
+            "pattern": "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,100}$"
         }
     },
     "required": [

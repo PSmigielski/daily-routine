@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import ApiErrorException from "../Exceptions/ApiErrorException";
-import ResetPasswordRequest from "../models/ResetPasswordRequest";
+import ResetPasswordRequest from "../models/ResetPasswordRequest.model";
 import User from "../models/User.model";
 import VerifyRequest from "../models/VerifyRequest.model";
 import MailerService from "../Services/MailerService";
@@ -26,8 +26,8 @@ class AuthController {
         }
     }
     public async verify(req: Request, res: Response, next: NextFunction) {
-        const { id } = req.params;
-        const result = await User.verify(id).catch(next);
+        const { requestId } = req.params;
+        const result = await User.verify(requestId).catch(next);
         if (result) {
             return res.status(202).json({ message: "User has been verified successfully" })
         }
@@ -68,6 +68,7 @@ class AuthController {
             next(new ApiErrorException("REFRESH_TOKEN cookie not found", 401))
         }
     }
+    //add schemas to this 2 functions`
     public async sendResetRequest(req: Request, res: Response, next: NextFunction) {
         const { email } = req.body;
         const user = await User.getUserByEmail(email).catch(next);
@@ -85,6 +86,11 @@ class AuthController {
                 return res.json({ message: "reset request has been sent" });
             }
         }
+    }
+    public async reset(req: Request, res: Response, next: NextFunction) {
+        const { newPassword } = req.body;
+        const { requestId } = req.params
+
     }
 }
 export default AuthController;

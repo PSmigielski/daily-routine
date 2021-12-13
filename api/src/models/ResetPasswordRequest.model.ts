@@ -20,6 +20,19 @@ class ResetPasswordRequest extends Model {
         });
         return request
     }
+    public static async getRequest(requestId: string) {
+        const prisma = ResetPasswordRequest.getPrisma()
+        const request = prisma.resetPasswordRequest.findUnique({
+            where: {
+                id: requestId
+            }
+        })
+        if (request == undefined) {
+            throw new ApiErrorException("Reset password request with this id does not exitst!", 404);
+        } else {
+            return request;
+        }
+    }
 }
 
 export default ResetPasswordRequest;

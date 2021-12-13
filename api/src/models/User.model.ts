@@ -5,6 +5,7 @@ import ApiErrorException from "../Exceptions/ApiErrorException";
 import meta from '../types/meta';
 import Model from "./Model";
 import RefreshToken from './RefreshToken.model';
+import ResetPasswordRequest from './ResetPasswordRequest.model';
 
 class User extends Model {
     private login: string | undefined;
@@ -48,7 +49,7 @@ class User extends Model {
             throw new ApiErrorException("Wrong credentials", 400);
         }
         if (!user.isVerified) {
-            throw new ApiErrorException("user is not verified go fuck yourself", 401);
+            throw new ApiErrorException("user is not verified", 401);
         }
         const [salt, key] = user.password.split(":");
         const hashedBuffer = scryptSync(password, salt, 64);
@@ -165,6 +166,19 @@ class User extends Model {
             }
         }
     }
+    public static async getUserById(userId: string) {
+        const prisma = User.getPrisma();
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userId
+            }
+        });
+        if (user == undefined) {
+            throw new ApiErrorException("User with this id does not exist!", 404);
+        } else {
+            return user;
+        }
+    }
     public static async getUserByEmail(email: string) {
         const prisma = User.getPrisma();
         const user = await prisma.user.findUnique({
@@ -177,6 +191,12 @@ class User extends Model {
         } else {
             return user;
         }
+    }
+    public static async resetPassword(newPassword: string, requestId: string) {
+        const request = await ResetPasswordRequest.getRequest(requestId);
+        const salt = randomBytes(32).toString("hex");
+        const hashedPassword: `${salt}:${scryptSync(this.plainPassword as string, salt, 64).toString("hex")
+    }`
     }
 }
 
