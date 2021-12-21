@@ -69,7 +69,7 @@ class User extends Model {
             }
         }
     }
-    public static async logout({ id }: { id: string, login: string }, token: string) {
+    public static async logout(token: string) {
         const prisma = User.getPrisma();
         const decoded = jwt.decode(token);
         if (typeof decoded != "string") {
@@ -87,7 +87,7 @@ class User extends Model {
                             code = 401;
                             break;
                         default:
-                            message = "can't login for some reason"
+                            message = "can't logout for some reason"
                     }
                     throw new ApiErrorException(message, code);
                 }
@@ -98,34 +98,27 @@ class User extends Model {
     }
     public static async verify(id: string) {
         const prisma = User.getPrisma();
-
         const request = await prisma.verifyRequest.findUnique({
-            where: {
-                id
+            where: { id },
+            include: {
+                user:{
+                    select: {
+                        id:true
+                    }
+                }
             }
         }).catch(err => {
             throw new ApiErrorException("request with this id does not exist", 404);
         })
         if (request) {
-            const user = await prisma.user.findUnique({
-                where: {
-                    id: request?.userId
-                }
-            })
             await prisma.user.update({
-                where: {
-                    id: user?.id
-                },
-                data: {
-                    isVerified: true
-                },
+                where: { id: request.user?.id },
+                data: { isVerified: true },
             }).catch(err => {
                 throw new ApiErrorException("user with this id does not exist", 404);
             })
             await prisma.verifyRequest.delete({
-                where: {
-                    id: request?.id
-                }
+                where: { id: request?.id }
             }).catch(err => {
                 throw new ApiErrorException("request with this id does not exist", 404);
             })
@@ -139,23 +132,21 @@ class User extends Model {
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
         if (typeof decoded != "string") {
             const refTokens = await prisma.refreshToken.findMany({
-                where: {
-                    userId: decoded.id,
+                where: { userId: decoded.id },
+                include:{ 
+                    user:{
+                        select:{
+                            login: true
+                        }
+                    } 
                 }
             })
             const refToken = refTokens.find(el => el.token == token)
+            console.log(refToken);
             if (refTokens.length === 0 || typeof refToken == "undefined") {
                 throw new ApiErrorException("no refresh token found", 403);
             } else {
-                const user = await prisma.user.findUnique({
-                    where: {
-                        id: refToken?.userId
-                    },
-                    select: {
-                        login: true
-                    }
-                })
-                const newToken: string = jwt.sign({ id: decoded.id, login: user?.login, refTokenId: refToken?.id }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
+                const newToken: string = jwt.sign({ id: decoded.id, login: refToken.user?.login, refTokenId: refToken?.id }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
                 const tokenData = jwt.decode(newToken);
                 if (typeof tokenData != "string") {
                     return {
@@ -169,9 +160,7 @@ class User extends Model {
     public static async getUserById(userId: string) {
         const prisma = User.getPrisma();
         const user = await prisma.user.findUnique({
-            where: {
-                id: userId
-            }
+            where: { id: userId }
         });
         if (user == undefined) {
             throw new ApiErrorException("User with this id does not exist!", 404);
@@ -182,9 +171,7 @@ class User extends Model {
     public static async getUserByEmail(email: string) {
         const prisma = User.getPrisma();
         const user = await prisma.user.findUnique({
-            where: {
-                email
-            }
+            where: { email }
         });
         if (user == undefined) {
             throw new ApiErrorException("User with this email does not exist!", 404);
@@ -193,10 +180,18 @@ class User extends Model {
         }
     }
     public static async resetPassword(newPassword: string, requestId: string) {
+        const prisma = User.getPrisma();
         const request = await ResetPasswordRequest.getRequest(requestId);
         const salt = randomBytes(32).toString("hex");
-        const hashedPassword: `${salt}:${scryptSync(this.plainPassword as string, salt, 64).toString("hex")
-    }`
+        const hashedPassword = `${salt}:${scryptSync(newPassword, salt, 64).toString("hex")}`;
+        const result = await ResetPasswordRequest.removeRequest(requestId);
+        const user = await prisma.user.update({
+            data: { password: hashedPassword },
+            where: { id:request?.userId }
+        }).catch(err => {
+            throw new ApiErrorException("user with this id does not exist", 404);
+        });
+        return true;
     }
 }
 

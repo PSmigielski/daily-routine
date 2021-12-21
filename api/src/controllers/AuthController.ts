@@ -47,7 +47,7 @@ class AuthController {
         }
     }
     public async logout(req: Request, res: Response, next: NextFunction) {
-        const result = await User.logout(req.user as { id: string, login: string, iat: number, exp: number }, req.cookies.BEARER).catch(next);
+        const result = await User.logout(req.cookies.BEARER).catch(next);
         if (result) {
             req.user = undefined;
             return res.clearCookie("BEARER").clearCookie("REFRESH_TOKEN").status(202).json({ message: "user logged out successfully" });
@@ -55,7 +55,6 @@ class AuthController {
     }
     public async refreshToken(req: Request, res: Response, next: NextFunction) {
         if (req.cookies.REFRESH_TOKEN != undefined) {
-            //debug tjos shit
             const newToken = await User.refreshToken(req.cookies.REFRESH_TOKEN.token).catch(next)
             if (newToken !== undefined) {
                 const tokenExp: Date = new Date();
@@ -68,7 +67,7 @@ class AuthController {
             next(new ApiErrorException("REFRESH_TOKEN cookie not found", 401))
         }
     }
-    //add schemas to this 2 functions`
+    //add schemas to this 2 functions VVVVV`
     public async sendResetRequest(req: Request, res: Response, next: NextFunction) {
         const { email } = req.body;
         const user = await User.getUserByEmail(email).catch(next);
@@ -90,7 +89,10 @@ class AuthController {
     public async reset(req: Request, res: Response, next: NextFunction) {
         const { newPassword } = req.body;
         const { requestId } = req.params
-
+        const result = await User.resetPassword(newPassword, requestId).catch(next);
+        if(result){
+            res.json({message: "Password reseted successfully"});
+        }
     }
 }
 export default AuthController;
