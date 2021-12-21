@@ -107,9 +107,8 @@ class User extends Model {
                     }
                 }
             }
-        }).catch(err => {
-            throw new ApiErrorException("request with this id does not exist", 404);
         })
+        //    throw new ApiErrorException("request with this id does not exist", 404);
         if (request) {
             await prisma.user.update({
                 where: { id: request.user?.id },
@@ -119,8 +118,6 @@ class User extends Model {
             })
             await prisma.verifyRequest.delete({
                 where: { id: request?.id }
-            }).catch(err => {
-                throw new ApiErrorException("request with this id does not exist", 404);
             })
             return true;
         } else {
@@ -182,16 +179,18 @@ class User extends Model {
     public static async resetPassword(newPassword: string, requestId: string) {
         const prisma = User.getPrisma();
         const request = await ResetPasswordRequest.getRequest(requestId);
-        const salt = randomBytes(32).toString("hex");
-        const hashedPassword = `${salt}:${scryptSync(newPassword, salt, 64).toString("hex")}`;
-        const result = await ResetPasswordRequest.removeRequest(requestId);
-        const user = await prisma.user.update({
-            data: { password: hashedPassword },
-            where: { id:request?.userId }
-        }).catch(err => {
-            throw new ApiErrorException("user with this id does not exist", 404);
-        });
-        return true;
+        if(request){
+            const salt = randomBytes(32).toString("hex");
+            const hashedPassword = `${salt}:${scryptSync(newPassword, salt, 64).toString("hex")}`;
+            const result = await ResetPasswordRequest.removeRequest(requestId);
+            const user = await prisma.user.update({
+                data: { password: hashedPassword },
+                where: { id:request?.userId }
+            })
+            return true;
+        } else{
+            return false;
+        }
     }
 }
 

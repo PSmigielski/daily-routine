@@ -22,9 +22,7 @@ class ResetPasswordRequest extends Model {
     }
     public static async getRequest(requestId: string) {
         const prisma = ResetPasswordRequest.getPrisma()
-        const request = prisma.resetPasswordRequest.findUnique({
-            where: { id: requestId }
-        })
+        const request = await prisma.resetPasswordRequest.findUnique({ where: { id: requestId } })
         if (request == undefined) {
             throw new ApiErrorException("Reset password request with this id does not exitst!", 404);
         } else {
@@ -33,9 +31,8 @@ class ResetPasswordRequest extends Model {
     }
     public static async removeRequest(requestId: string) {
         const prisma = ResetPasswordRequest.getPrisma();
-        const request = prisma.resetPasswordRequest.delete({
-            where: { id: requestId }
-        });
+        const request = await prisma.resetPasswordRequest.delete({ where: { id: requestId } });
+        console.log(request)
     }
 }
 
