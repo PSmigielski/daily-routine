@@ -1,11 +1,10 @@
-import { Prisma } from '@prisma/client'
 import jwt from "jsonwebtoken";
 import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import ApiErrorException from "../Exceptions/ApiErrorException";
-import meta from '../types/meta';
 import Model from "./Model";
 import RefreshToken from './RefreshToken.model';
 import ResetPasswordRequest from './ResetPasswordRequest.model';
+import PrismaException from '../Exceptions/PrismaException';
 
 class User extends Model {
     private login: string | undefined;
@@ -26,25 +25,14 @@ class User extends Model {
                 login: this.login as string,
                 password: `${salt}:${scryptSync(this.plainPassword as string, salt, 64).toString("hex")}`
             }
-        }).catch(err => {
-            if (err instanceof Prisma.PrismaClientKnownRequestError) {
-                let message: string = "";
-                let data: meta = err.meta as meta
-                switch (err.code) {
-                    case "P2002":
-                        message = `User with this ${data.target[0]} exist`
-                        break;
-                }
-                throw new ApiErrorException(message, 400);
-            }
-        })
+        }).catch(err => { throw PrismaException.createException(err,"User") });     
         return user;
     }
     public static async login({ login, password }: { login: string, password: string }) {
         const prisma = User.getPrisma();
         const user = await prisma.user.findUnique({
             where: { login }
-        })
+        }).catch(err => { throw PrismaException.createException(err,"User") }); 
         if (!user) {
             throw new ApiErrorException("Wrong credentials", 400);
         }
@@ -74,24 +62,8 @@ class User extends Model {
         const decoded = jwt.decode(token);
         if (typeof decoded != "string") {
             const refToken = await prisma.refreshToken.delete({
-                where: {
-                    id: decoded?.refTokenId
-                }
-            }).catch(err => {
-                if (err instanceof Prisma.PrismaClientKnownRequestError) {
-                    let message: string = "";
-                    let code: number = 500;
-                    switch (err.code) {
-                        case "P2025":
-                            message = `this refresh token does not exist`;
-                            code = 401;
-                            break;
-                        default:
-                            message = "can't logout for some reason"
-                    }
-                    throw new ApiErrorException(message, code);
-                }
-            })
+                where: { id: decoded?.refTokenId }
+            }).catch(err => { throw PrismaException.createException(err,"User") }); 
             return true;
         }
         return false;
@@ -100,25 +72,16 @@ class User extends Model {
         const prisma = User.getPrisma();
         const request = await prisma.verifyRequest.findUnique({
             where: { id },
-            include: {
-                user:{
-                    select: {
-                        id:true
-                    }
-                }
-            }
-        })
-        //    throw new ApiErrorException("request with this id does not exist", 404);
+            include: { user:{ select: { id:true } } }
+        }).catch(err => { throw PrismaException.createException(err,"User") }); 
         if (request) {
             await prisma.user.update({
                 where: { id: request.user?.id },
                 data: { isVerified: true },
-            }).catch(err => {
-                throw new ApiErrorException("user with this id does not exist", 404);
-            })
+            }).catch(err => { throw PrismaException.createException(err,"User") });
             await prisma.verifyRequest.delete({
                 where: { id: request?.id }
-            })
+            }).catch(err => { throw PrismaException.createException(err,"User") });
             return true;
         } else {
             throw new ApiErrorException("request with this id does not exist", 404);
@@ -130,14 +93,8 @@ class User extends Model {
         if (typeof decoded != "string") {
             const refTokens = await prisma.refreshToken.findMany({
                 where: { userId: decoded.id },
-                include:{ 
-                    user:{
-                        select:{
-                            login: true
-                        }
-                    } 
-                }
-            })
+                include:{ user:{ select:{ login: true } } }
+            }).catch(err => { throw PrismaException.createException(err,"User") });
             const refToken = refTokens.find(el => el.token == token)
             console.log(refToken);
             if (refTokens.length === 0 || typeof refToken == "undefined") {
@@ -158,7 +115,7 @@ class User extends Model {
         const prisma = User.getPrisma();
         const user = await prisma.user.findUnique({
             where: { id: userId }
-        });
+        }).catch(err => { throw PrismaException.createException(err,"User") });
         if (user == undefined) {
             throw new ApiErrorException("User with this id does not exist!", 404);
         } else {
@@ -169,7 +126,7 @@ class User extends Model {
         const prisma = User.getPrisma();
         const user = await prisma.user.findUnique({
             where: { email }
-        });
+        }).catch(err => { throw PrismaException.createException(err,"User") });
         if (user == undefined) {
             throw new ApiErrorException("User with this email does not exist!", 404);
         } else {
@@ -183,10 +140,10 @@ class User extends Model {
             const salt = randomBytes(32).toString("hex");
             const hashedPassword = `${salt}:${scryptSync(newPassword, salt, 64).toString("hex")}`;
             const result = await ResetPasswordRequest.removeRequest(requestId);
-            const user = await prisma.user.update({
+            await prisma.user.update({
                 data: { password: hashedPassword },
                 where: { id:request?.userId }
-            })
+            }).catch(err => { throw PrismaException.createException(err,"User") });
             return true;
         } else{
             return false;

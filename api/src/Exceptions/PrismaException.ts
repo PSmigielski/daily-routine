@@ -1,20 +1,22 @@
-import meta from "../types/meta";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
+import PrismaMeta from "../types/PrimsaMeta";
+import meta from "../types/PrimsaMeta";
 
 class PrismaException extends Error{
     private statusCode: number;
     private prismaErrorType: string;
-    private prismaErrorCode: string;
-    private prismaMessage: string | undefined;
+    private prismaMessage: string;
+    private prismaErrorCode?: string | undefined;
     private prismaMetadata?: meta | undefined;
     private prismaErrorEntity: string;
-    constructor(prismaErrorCode: string, statusCode: number = 500,prismaErrorEntity:string ,prismaErrorType:string ,prismaMetadata?: meta, prismaMessage?: string){
+    constructor(prismaErrorEntity:string ,prismaErrorType:string ,prismaMessage: string,prismaErrorCode?: string, prismaMetadata?: meta, ){
         super();
-        this.statusCode = statusCode;
-        this.prismaErrorCode = prismaErrorCode;
+        this.statusCode = 500;
+        this.prismaMessage = prismaMessage;
         this.prismaErrorType = prismaErrorType;
-        this.prismaMetadata = prismaMetadata && prismaMetadata || undefined; 
-        this.prismaMessage = prismaMessage && prismaMessage || undefined;
         this.prismaErrorEntity = prismaErrorEntity
+        this.prismaErrorCode = prismaErrorCode && prismaErrorCode || undefined; 
+        this.prismaMetadata = prismaMetadata && prismaMetadata || undefined; 
     }
     public getStatusCode(){
         return this.statusCode;
@@ -25,9 +27,11 @@ class PrismaException extends Error{
             case "PrismaClientKnownRequestError":
                 switch(this.prismaErrorCode){
                     case "P2002":
+                        this.statusCode = 403;
                         errorMessage = `${this.prismaErrorEntity} with this ${this.prismaMetadata?.target[0]} exist`
                         break;
                     case "P2025":
+                        this.statusCode = 404;
                         errorMessage = `this ${this.prismaErrorEntity} does not exist`;
                         break;
                     default:
@@ -37,7 +41,6 @@ class PrismaException extends Error{
                 }
                 break;
             case "PrismaClientValidationError":
-                break;
             case "PrismaClientUnknownRequestError":
             case "PrismaClientRustPanicError":
             case "PrismaClientInitializationError":
@@ -47,6 +50,15 @@ class PrismaException extends Error{
 
         }
         return errorMessage
+    }
+    public static createException(err: Error, entityName:string){
+        let errCode:string | undefined = undefined;
+        let errMeta: PrismaMeta| undefined = undefined;
+        if(err instanceof PrismaClientKnownRequestError){
+            errCode = err.code;
+            errMeta = err.meta as PrismaMeta;
+        }
+        return new PrismaException(entityName, err.constructor.name, err.message, errCode, errMeta);     
     }
 }
 

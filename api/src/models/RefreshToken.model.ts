@@ -1,6 +1,6 @@
 import Model from "./Model";
 import jwt from "jsonwebtoken";
-import ApiErrorException from "../Exceptions/ApiErrorException";
+import PrismaException from "../Exceptions/PrismaException";
 
 class RefreshToken extends Model {
     private userId: string | undefined;
@@ -16,9 +16,7 @@ class RefreshToken extends Model {
                 token: refreshToken,
                 userId: this.userId as string
             }
-        }).catch(err => {
-            throw new ApiErrorException("Refresh token can't be created for some reason", 500);
-        })
+        }).catch(err => { throw PrismaException.createException(err,"User") });
         return token;
     }
 }
