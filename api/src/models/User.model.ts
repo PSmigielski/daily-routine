@@ -5,6 +5,7 @@ import Model from "./Model";
 import RefreshToken from './RefreshToken.model';
 import ResetPasswordRequest from './ResetPasswordRequest.model';
 import PrismaException from '../Exceptions/PrismaException';
+import VerifyRequest from "./VerifyRequest.model";
 
 class User extends Model {
     private login: string | undefined;
@@ -67,18 +68,13 @@ class User extends Model {
     }
     public static async verify(id: string) {
         const prisma = User.getPrisma();
-        const request = await prisma.verifyRequest.findUnique({
-            where: { id },
-            include: { user:{ select: { id:true } } }
-        }).catch(err => { throw PrismaException.createException(err,"User") }); 
+        const request = await VerifyRequest.getUniqueVerifyRequest(id);
         if (request) {
-            await prisma.user.update({
+            const updatedUser = await prisma.user.update({
                 where: { id: request.user?.id },
                 data: { isVerified: true },
             }).catch(err => { throw PrismaException.createException(err,"User") });
-            await prisma.verifyRequest.delete({
-                where: { id: request?.id }
-            }).catch(err => { throw PrismaException.createException(err,"User") });
+            const deletedVerifyRequest = await VerifyRequest.delete(request.id);
             return true;
         } else {
             throw new ApiErrorException("request with this id does not exist", 404);
@@ -129,7 +125,7 @@ class User extends Model {
             const salt = randomBytes(32).toString("hex");
             const hashedPassword = `${salt}:${scryptSync(newPassword, salt, 64).toString("hex")}`;
             const result = await ResetPasswordRequest.removeRequest(requestId);
-            await prisma.user.update({
+            const updatedUser = await prisma.user.update({
                 data: { password: hashedPassword },
                 where: { id:request?.userId }
             }).catch(err => { throw PrismaException.createException(err,"User") });
