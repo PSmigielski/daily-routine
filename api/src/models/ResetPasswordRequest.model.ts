@@ -5,16 +5,16 @@ import Model from "./Model";
 class ResetPasswordRequest extends Model {
     public static async create(userId: string) {
         const prisma = ResetPasswordRequest.getPrisma();
-        const request = prisma.resetPasswordRequest.create({ data: { userId } }).catch(err => { throw PrismaException.createException(err,"User") });
+        const request = await prisma.resetPasswordRequest.create({ data: { userId } }).catch(err => { throw PrismaException.createException(err,"ResetPasswordRequest") });
         return request
     }
     public static async getRequest(requestId: string) {
         const prisma = ResetPasswordRequest.getPrisma()
         const request = await prisma.resetPasswordRequest.findUnique({ 
             where: { id: requestId } 
-        }).catch(err => { throw PrismaException.createException(err,"User") });
+        }).catch(err => { throw PrismaException.createException(err,"ResetPasswordRequest") });
         if (request == undefined) {
-            throw new ApiErrorException("Reset password request with this id does not exitst!", 404);
+            throw new ApiErrorException("Reset password request with this id does not exist!", 404);
         } else {
             return request;
         }
@@ -23,7 +23,7 @@ class ResetPasswordRequest extends Model {
         const prisma = ResetPasswordRequest.getPrisma();
         const request = await prisma.resetPasswordRequest.delete({
             where: { id: requestId } 
-        }).catch(err => { throw PrismaException.createException(err,"User") });
+        }).catch(err => { throw PrismaException.createException(err,"ResetPasswordRequest") });
         return true;
     }
 }

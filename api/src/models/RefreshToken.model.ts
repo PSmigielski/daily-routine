@@ -16,7 +16,7 @@ class RefreshToken extends Model {
                 token: refreshToken,
                 userId: this.userId as string
             }
-        }).catch(err => { throw PrismaException.createException(err,"User") });
+        }).catch(err => { throw PrismaException.createException(err,"RefreshToken") });
         return token;
     }
 }
