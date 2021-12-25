@@ -58,12 +58,9 @@ class User extends Model {
         }
     }
     public static async logout(token: string) {
-        const prisma = User.getPrisma();
         const decoded = jwt.decode(token);
         if (typeof decoded != "string") {
-            const refToken = await prisma.refreshToken.delete({
-                where: { id: decoded?.refTokenId }
-            }).catch(err => { throw PrismaException.createException(err,"User") }); 
+            const refToken = await RefreshToken.deleteToken(decoded?.refTokenId);
             return true;
         }
         return false;
@@ -87,26 +84,18 @@ class User extends Model {
             throw new ApiErrorException("request with this id does not exist", 404);
         }
     }
-    public static async refreshToken(token: string) {
-        const prisma = User.getPrisma();
+    public static async refreshBearerToken(token: string) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
         if (typeof decoded != "string") {
-            const refTokens = await prisma.refreshToken.findMany({
-                where: { userId: decoded.id },
-                include:{ user:{ select:{ login: true } } }
-            }).catch(err => { throw PrismaException.createException(err,"User") });
+            const refTokens = await RefreshToken.getTokens(decoded.id); 
             const refToken = refTokens.find(el => el.token == token)
-            console.log(refToken);
             if (refTokens.length === 0 || typeof refToken == "undefined") {
                 throw new ApiErrorException("no refresh token found", 403);
             } else {
                 const newToken: string = jwt.sign({ id: decoded.id, login: refToken.user?.login, refTokenId: refToken?.id }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
                 const tokenData = jwt.decode(newToken);
                 if (typeof tokenData != "string") {
-                    return {
-                        token: newToken,
-                        exp: tokenData?.exp
-                    }
+                    return { token: newToken, exp: tokenData?.exp };
                 }
             }
         }

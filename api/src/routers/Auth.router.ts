@@ -11,7 +11,7 @@ authRouter.post("/register", schemaValidator("/../../schemas/register.schema.jso
 authRouter.post("/login", schemaValidator("/../../schemas/login.schema.json"), authController.login.bind(authController));
 authRouter.post("/logout", checkJwt, authController.logout.bind(authController));
 authRouter.get("/verify/:requestId", authController.verify.bind(authController));
-authRouter.post("/refresh", authController.refreshToken.bind(authController));
+authRouter.post("/refresh", authController.refreshBearerToken.bind(authController));
 authRouter.post("/forget", schemaValidator("/../../schemas/forget.schema.json"), authController.sendResetRequest.bind(authController));
 authRouter.put("/reset/:requestId", schemaValidator("/../../schemas/reset.schema.json"), authController.reset.bind(authController));
 

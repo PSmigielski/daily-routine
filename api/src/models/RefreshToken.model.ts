@@ -8,10 +8,10 @@ class RefreshToken extends Model {
         super();
         this.userId = userId;
     }
-    public createToken() {
+    public async createToken() {
         const prisma = RefreshToken.getPrisma();
-        const refreshToken = jwt.sign({ id: this.userId }, process.env.JWT_SECRET as string, { expiresIn: 60 * 60 * 24 * 60 });
-        const token = prisma.refreshToken.create({
+        const refreshToken = jwt.sign({ id: this.userId }, process.env.JWT_SECRET as string, { expiresIn:  60 * 60 * 24 * 60 });
+        const token = await prisma.refreshToken.create({
             data: {
                 token: refreshToken,
                 userId: this.userId as string
@@ -19,6 +19,22 @@ class RefreshToken extends Model {
         }).catch(err => { throw PrismaException.createException(err,"RefreshToken") });
         return token;
     }
+    public static async getTokens(userId: string){
+        const prisma = RefreshToken.getPrisma();
+        const refTokens = await prisma.refreshToken.findMany({
+            where: { userId },
+            include:{ user:{ select:{ login: true } } }
+        }).catch(err => { throw PrismaException.createException(err,"RefreshToken") });
+        return refTokens
+    }
+    public static async deleteToken(id:string){
+        const prisma = RefreshToken.getPrisma();
+        const deletedToken = await prisma.refreshToken.delete({
+            where: { id }
+        }).catch(err => { throw PrismaException.createException(err,"RefreshToken") }); 
+        return deletedToken;
+    }
+
 }
 
 export default RefreshToken

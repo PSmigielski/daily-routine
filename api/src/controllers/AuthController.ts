@@ -53,9 +53,9 @@ class AuthController {
             return res.clearCookie("BEARER").clearCookie("REFRESH_TOKEN").status(202).json({ message: "user logged out successfully" });
         }
     }
-    public async refreshToken(req: Request, res: Response, next: NextFunction) {
+    public async refreshBearerToken(req: Request, res: Response, next: NextFunction) {
         if (req.cookies.REFRESH_TOKEN != undefined) {
-            const newToken = await User.refreshToken(req.cookies.REFRESH_TOKEN.token).catch(next)
+            const newToken = await User.refreshBearerToken(req.cookies.REFRESH_TOKEN.token).catch(next)
             if (newToken !== undefined) {
                 const tokenExp: Date = new Date();
                 tokenExp.setTime(newToken?.exp as number * 1000);
