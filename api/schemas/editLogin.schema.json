@@ -1,0 +1,14 @@
+{
+    "type": "object",
+    "properties": {
+        "login": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 100
+        }
+    },
+    "required": [
+        "email"
+    ],
+    "additionalProperties": false
+}
