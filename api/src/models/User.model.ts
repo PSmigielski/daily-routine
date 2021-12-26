@@ -30,10 +30,7 @@ class User extends Model {
         return user;
     }
     public static async login({ login, password }: { login: string, password: string }) {
-        const prisma = User.getPrisma();
-        const user = await prisma.user.findUnique({
-            where: { login }
-        }).catch(err => { throw PrismaException.createException(err,"User") }); 
+        const user = await User.getUserByLogin(login);
         if (!user) {
             throw new ApiErrorException("Wrong credentials", 400);
         }
@@ -112,11 +109,14 @@ class User extends Model {
         const user = await prisma.user.findUnique({
             where: { email }
         }).catch(err => { throw PrismaException.createException(err,"User") });
-        if (user == undefined) {
-            throw new ApiErrorException("User with this email does not exist!", 404);
-        } else {
-            return user;
-        }
+        return user;
+    }
+    public static async getUserByLogin(login: string) {
+        const prisma = User.getPrisma();
+        const user = await prisma.user.findUnique({
+            where: { login }
+        }).catch(err => { throw PrismaException.createException(err,"User") });
+        return user;
     }
     public static async resetPassword(newPassword: string, requestId: string) {
         const prisma = User.getPrisma();
