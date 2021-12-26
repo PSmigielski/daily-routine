@@ -4,7 +4,6 @@ import ResetPasswordRequest from "../models/ResetPasswordRequest.model";
 import User from "../models/User.model";
 import VerifyRequest from "../models/VerifyRequest.model";
 import MailerService from "../Services/MailerService";
-
 class AuthController {
     public async register(req: Request, res: Response, next: NextFunction) {
         const { email, login, password } = req.body;
@@ -13,14 +12,7 @@ class AuthController {
         if (data) {
             const request = await VerifyRequest.create(data.id).catch(next)
             if (request) {
-                MailerService.sendMail({
-                    from: "Daily Routine",
-                    to: email,
-                    subject: "Verify your account",
-                    html: `<h1>Hi!</h1>
-                    <p> To verify your email, please visit the following <a href="http://localhost:4000/v1/api/auth/verify/${request.id}" >link</a></p>
-                    <br><p> Cheers! </p>`,
-                });
+                MailerService.sendVerificationMail(email, request.id);
                 return res.json(data);
             }
         }
@@ -29,7 +21,7 @@ class AuthController {
         const { requestId } = req.params;
         const result = await User.verify(requestId).catch(next);
         if (result) {
-            return res.status(202).json({ message: "User has been verified successfully" })
+            return res.status(202).json({ message: "Email has been verified successfully" })
         }
     }
     public async login(req: Request, res: Response, next: NextFunction) {
@@ -47,7 +39,7 @@ class AuthController {
         }
     }
     public async logout(req: Request, res: Response, next: NextFunction) {
-        const result = await User.logout(req.cookies.BEARER).catch(next);
+        const result = await User.logout(req.user?.refTokenId).catch(next);
         if (result) {
             req.user = undefined;
             return res.clearCookie("BEARER").clearCookie("REFRESH_TOKEN").status(202).json({ message: "user logged out successfully" });
@@ -67,23 +59,17 @@ class AuthController {
             next(new ApiErrorException("REFRESH_TOKEN cookie not found", 401))
         }
     }
-    //add schemas to this 2 functions VVVVV`
     public async sendResetRequest(req: Request, res: Response, next: NextFunction) {
         const { email } = req.body;
         const user = await User.getUserByEmail(email).catch(next);
         if (user) {
             const request = await ResetPasswordRequest.create(user.id).catch(next)
             if (request) {
-                MailerService.sendMail({
-                    from: "Daily Routine",
-                    to: email,
-                    subject: "Reset your password",
-                    html: `<h1>Hi!</h1>
-                    <p> To reset your password, please visit the following <a href="http://localhost:4000/v1/api/auth/reset/${request.id}" >link</a></p>
-                    <br><p> Cheers! </p>`,
-                });
+                MailerService.sendResetRequest(email, request.id);
                 return res.json({ message: "reset request has been sent" });
             }
+        }else{
+            throw new ApiErrorException("User with this email does not exist!", 404);
         }
     }
     public async reset(req: Request, res: Response, next: NextFunction) {
@@ -92,6 +78,23 @@ class AuthController {
         const result = await User.resetPassword(newPassword, requestId).catch(next);
         if(result){
             res.json({message: "Password reseted successfully"});
+        }
+    }
+    public async editLogin(req: Request, res: Response, next: NextFunction){
+        const { login } = req.body;
+        const result = await User.editLogin(login, req.user?.id);
+        if(result){
+            const result2 = await User.logout(req.user?.refTokenId).catch(next);
+            if(result2){
+                return res.clearCookie("BEARER").clearCookie("REFRESH_TOKEN").status(202).json({ message: "You must sign in to complete the login change" });
+            }
+        }
+    }
+    public async editPassword(req: Request, res: Response, next: NextFunction){
+        const { password, newPassword } = req.body;
+        const result = await User.editPassword(password,newPassword, req.user?.id).catch(next); 
+        if(result){
+            return res.status(202).json({message: "password updated successfully"});
         }
     }
 }

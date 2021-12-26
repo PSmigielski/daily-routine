@@ -6,6 +6,7 @@ import RefreshToken from './RefreshToken.model';
 import ResetPasswordRequest from './ResetPasswordRequest.model';
 import PrismaException from '../Exceptions/PrismaException';
 import VerifyRequest from "./VerifyRequest.model";
+import IUser from "../types/IUser";
 
 class User extends Model {
     private login: string | undefined;
@@ -32,17 +33,13 @@ class User extends Model {
     public static async login({ login, password }: { login: string, password: string }) {
         const user = await User.getUserByLogin(login);
         if (!user) {
-            throw new ApiErrorException("Wrong credentials", 400);
+            throw new ApiErrorException("Wrong credentials", 403);
         }
         if (!user.isVerified) {
             throw new ApiErrorException("user is not verified", 401);
         }
-        const [salt, key] = user.password.split(":");
-        const hashedBuffer = scryptSync(password, salt, 64);
-        const keyBuffer = Buffer.from(key, 'hex');
-        const match = timingSafeEqual(hashedBuffer, keyBuffer);
-        if (!match) {
-            throw new ApiErrorException("Wrong credentials", 400);
+        if (!User.checkPassword(password,user)) {
+            throw new ApiErrorException("Wrong credentials", 403);
         }
         const refreshToken = await new RefreshToken(user.id).createToken();
         const token = jwt.sign({ id: user.id, login, refTokenId: refreshToken.id }, process.env.JWT_SECRET as string, { expiresIn: 60 * 15 })
@@ -55,13 +52,9 @@ class User extends Model {
             }
         }
     }
-    public static async logout(token: string) {
-        const decoded = jwt.decode(token);
-        if (typeof decoded != "string") {
-            const refToken = await RefreshToken.deleteToken(decoded?.refTokenId);
-            return true;
-        }
-        return false;
+    public static async logout(refTokenId: string) {
+        const refToken = await RefreshToken.deleteToken(refTokenId);
+        return true;
     }
     public static async verify(id: string) {
         const prisma = User.getPrisma();
@@ -95,6 +88,9 @@ class User extends Model {
     }
     public static async getUserById(userId: string) {
         const prisma = User.getPrisma();
+        if(userId == undefined){
+            throw new ApiErrorException("undefined user id", 404);
+        }
         const user = await prisma.user.findUnique({
             where: { id: userId }
         }).catch(err => { throw PrismaException.createException(err,"User") });
@@ -106,6 +102,9 @@ class User extends Model {
     }
     public static async getUserByEmail(email: string) {
         const prisma = User.getPrisma();
+        if(email == undefined){
+            throw new ApiErrorException("undefined email", 404);
+        }
         const user = await prisma.user.findUnique({
             where: { email }
         }).catch(err => { throw PrismaException.createException(err,"User") });
@@ -113,6 +112,9 @@ class User extends Model {
     }
     public static async getUserByLogin(login: string) {
         const prisma = User.getPrisma();
+        if(login == undefined){
+            throw new ApiErrorException("undefined login", 404);
+        }
         const user = await prisma.user.findUnique({
             where: { login }
         }).catch(err => { throw PrismaException.createException(err,"User") });
@@ -134,6 +136,35 @@ class User extends Model {
             return false;
         }
     }
+    private static checkPassword(password:string, user: IUser ){
+        const [salt, key] = user.password.split(":");
+        const hashedBuffer = scryptSync(password, salt, 64);
+        const keyBuffer = Buffer.from(key, 'hex');
+        return timingSafeEqual(hashedBuffer, keyBuffer);
+    }
+    public static async editPassword(password: string,newPassword:string, userId:string){
+        const prisma = User.getPrisma();
+        const user = await User.getUserById(userId);
+        if(!User.checkPassword(password, user)){
+            throw new ApiErrorException("Wrong old password", 403);
+        }
+        const salt = randomBytes(32).toString("hex");
+        const hashedPassword = `${salt}:${scryptSync(newPassword, salt, 64).toString("hex")}`;
+        await prisma.user.update({
+            data: { password: hashedPassword },
+            where: { id: userId }
+        }).catch(err => { throw PrismaException.createException(err,"User") });
+        return true;
+    }
+    public static async editLogin(login: string, userId: string){
+        const prisma = User.getPrisma();
+        await prisma.user.update({
+            data: { login },
+            where: { id: userId }
+        }).catch(err => { throw PrismaException.createException(err,"User") });
+        return true;
+    }
+
 }
 
 export default User;

@@ -7,7 +7,10 @@ const checkJwt = (req: Request, res: Response, next: NextFunction) => {
         throw new ApiErrorException("Token not found", 401);
     }
     const token = jwt.verify(req.cookies.BEARER, process.env.JWT_SECRET as string);
-    req.user = token;
+    if(typeof token == "string"){
+        throw new ApiErrorException("Something went wrong", 500);
+    }
+    req.user = token as jwt.JwtPayload;
     next();
 }
 
