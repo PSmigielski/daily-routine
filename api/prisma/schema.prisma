@@ -11,11 +11,15 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid()) @db.Uuid
-  login    String @unique @db.VarChar(100)
-  password String @db.Text
-  email    String @unique @db.VarChar(100)
-  tasks    Task[]
+  id                   String                 @id @default(uuid()) @db.Uuid
+  login                String                 @unique @db.VarChar(100)
+  password             String                 @db.Text
+  email                String                 @unique @db.VarChar(100)
+  tasks                Task[]
+  isVerified           Boolean                @default(false)
+  VerifyRequest        VerifyRequest?
+  RefreshToken         RefreshToken[]
+  ResetPasswordRequest ResetPasswordRequest[]
 }
 
 model Task {
@@ -23,6 +27,25 @@ model Task {
   task_name        String   @db.VarChar(255)
   task_description String?  @db.Text
   createdAt        DateTime
-  author           User     @relation(fields: [authorId], references: [id])
+  author           User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId         String   @db.Uuid
+}
+
+model VerifyRequest {
+  id     String @id @default(uuid()) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @db.Uuid
+}
+
+model ResetPasswordRequest {
+  id     String @id @default(uuid()) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @db.Uuid
+}
+
+model RefreshToken {
+  id     String @id @default(uuid()) @db.Uuid
+  token  String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
 }

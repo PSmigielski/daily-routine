@@ -8,12 +8,12 @@
         },
         "login": {
             "type": "string",
+            "minLength": 5,
             "maxLength": 100
         },
         "password": {
             "type": "string",
-            "minLength": 6,
-            "maxLength": 150
+            "pattern": "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,100}$"
         }
     },
     "required": [
