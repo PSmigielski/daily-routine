@@ -1,6 +1,6 @@
 import Model from "./Model";
 import jwt from "jsonwebtoken";
-import PrismaException from "../Exceptions/PrismaException";
+import PrismaException from "../exceptions/PrismaException";
 
 class RefreshToken extends Model {
     private userId: string | undefined;

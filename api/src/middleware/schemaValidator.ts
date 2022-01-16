@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import addFormats from "ajv-formats";
 import fs from "fs";
 import IUser from "../types/IUser";
-import ApiErrorException from "../Exceptions/ApiErrorException";
+import ApiErrorException from "../exceptions/ApiErrorException";
 import validation from "ajv/dist/vocabularies/validation";
 
 const schemaValidator = (pathToSchema: string) => {

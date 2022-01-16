@@ -1,5 +1,5 @@
-import ApiErrorException from "../Exceptions/ApiErrorException";
-import PrismaException from "../Exceptions/PrismaException";
+import ApiErrorException from "../exceptions/ApiErrorException";
+import PrismaException from "../exceptions/PrismaException";
 import Model from "./Model";
 
 class ResetPasswordRequest extends Model {

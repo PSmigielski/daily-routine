@@ -1,4 +1,4 @@
-import PrismaException from "../Exceptions/PrismaException";
+import PrismaException from "../exceptions/PrismaException";
 import Model from "./Model"
 
 class VerifyRequest extends Model {
