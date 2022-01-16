@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import ApiErrorException from "../Exceptions/ApiErrorException";
+import ApiErrorException from "../exceptions/ApiErrorException";
 
 const errorHandler = (err: ApiErrorException | Error, req: Request, res: Response, next: NextFunction) => {
     if (res.headersSent) {

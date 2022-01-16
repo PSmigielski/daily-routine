@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import ApiErrorException from "../Exceptions/ApiErrorException";
+import ApiErrorException from "../exceptions/ApiErrorException";
 import ResetPasswordRequest from "../models/ResetPasswordRequest.model";
 import User from "../models/User.model";
 import VerifyRequest from "../models/VerifyRequest.model";
-import MailerService from "../Services/MailerService";
+import MailerService from "../services/MailerService";
 class AuthController {
     public async register(req: Request, res: Response, next: NextFunction) {
         const { email, login, password } = req.body;

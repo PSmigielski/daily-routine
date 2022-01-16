@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
-import ApiErrorException from "../Exceptions/ApiErrorException";
+import ApiErrorException from "../exceptions/ApiErrorException";
 import Model from "./Model";
 import RefreshToken from './RefreshToken.model';
 import ResetPasswordRequest from './ResetPasswordRequest.model';
-import PrismaException from '../Exceptions/PrismaException';
+import PrismaException from '../exceptions/PrismaException';
 import VerifyRequest from "./VerifyRequest.model";
 import IUser from "../types/IUser";
 
