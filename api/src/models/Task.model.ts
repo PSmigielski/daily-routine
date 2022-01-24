@@ -1,4 +1,6 @@
+import ApiErrorException from "../exceptions/ApiErrorException";
 import PrismaException from "../exceptions/PrismaException";
+import paginationService from "../services/paginationService";
 import Model from "./Model";
 
 class Task extends Model{
@@ -26,6 +28,26 @@ class Task extends Model{
             }
         }).catch(err => { throw PrismaException.createException(err,"Task") });
         return task;
+    }
+    public static async getTasks(userId: string, page: number){
+        const prisma = Task.getPrisma();
+        const limit = 25;
+        const count = await prisma.task.count();
+        const totalPages = Math.floor(count/limit)
+        paginationService(page, limit, count);
+        const tasks = await prisma.task.findMany({ 
+            take: limit,
+            skip: page*limit,
+            where: { authorId: userId },
+            orderBy: { createdAt: "asc"}
+        })
+        return {
+            totalCount: count,
+            currentCount: tasks.length,
+            page,
+            totalPages,
+            tasks
+        };
     }
 };
 

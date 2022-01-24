@@ -8,6 +8,14 @@ class TaskController{
         const task = await new Task(name, userId ,description).createTask().catch(next);
         res.status(201).json({message: "Task created successfully", task});
     }
+    public async findAllForUser(req: Request, res: Response, next: NextFunction){
+        const userId = req.user?.id;
+        const page: number  = req.query.page ? parseInt(req.query.page as string, 10) : 0;
+        const tasks = await Task.getTasks(userId, page).catch(next);
+        if(tasks){
+            res.status(200).json(tasks);
+        }
+    }
 }
 
 export default TaskController;
