@@ -16,6 +16,13 @@ class TaskController{
             res.status(200).json(tasks);
         }
     }
+    public async findOneTask(req: Request, res: Response, next: NextFunction){
+        const taskId: string = req.params.taskId;
+        const task = await Task.getTask(taskId).catch(next);
+        if(task){
+            res.status(200).json(task);
+        }
+    }
 }
 
 export default TaskController;

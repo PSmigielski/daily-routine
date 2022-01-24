@@ -32,7 +32,8 @@ class Task extends Model{
     public static async getTasks(userId: string, page: number){
         const prisma = Task.getPrisma();
         const limit = 25;
-        const count = await prisma.task.count().catch(err => { throw PrismaException.createException(err,"Task") });
+        const count = await prisma.task.count()
+        .catch(err => { throw PrismaException.createException(err,"Task") });
         const totalPages = Math.floor(count/limit)
         paginationService(page, limit, count);
         const tasks = await prisma.task.findMany({ 
@@ -48,6 +49,15 @@ class Task extends Model{
             totalPages,
             tasks
         };
+    }
+    public static async getTask(taskId: string){
+        const prisma = Task.getPrisma();
+        const task = await prisma.task.findUnique({ where:{ id: taskId }})
+        .catch(err => { throw PrismaException.createException(err,"Task") })
+        if(!task){
+            throw new ApiErrorException("task with this id does not exist!", 404)
+        }
+        return task;
     }
 };
 
