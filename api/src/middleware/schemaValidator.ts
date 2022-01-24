@@ -14,7 +14,11 @@ const schemaValidator = (pathToSchema: string) => {
         const validate: ValidateFunction = ajv.compile(schema)
         if (!validate(req.body)) {
             if (validate.errors !== undefined && validate.errors !== null) {
+                //console.log(validate.errors);
                 switch(validate.errors[0].keyword){
+                    case "minProperties":
+                        throw new ApiErrorException(`${validate.errors[0].params.limit} param/s required`, 400);
+                    break;
                     case "pattern":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} does not match pattern`, 400);
                     break;

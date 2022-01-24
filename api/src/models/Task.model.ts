@@ -59,6 +59,21 @@ class Task extends Model{
         }
         return task;
     }
+    public static async editTask(taskId: string, userId: string,data: {name?: string, description?: string}){
+        const prisma = Task.getPrisma();
+        const task = await prisma.task.findUnique({
+            where: {id: taskId}, 
+            select: {authorId:true}
+        });
+        if(userId !== task?.authorId){
+            throw new ApiErrorException("this task does not belong to you", 403);
+        }
+        const updatedTask = prisma.task.update({
+            data,
+            where: { id: taskId }
+        }).catch(err => { throw PrismaException.createException(err,"Task") })
+        return updatedTask
+    }
 };
 
 export default Task;
