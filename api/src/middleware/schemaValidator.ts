@@ -13,7 +13,6 @@ const schemaValidator = (pathToSchema: string) => {
         const schema: JSONSchemaType<IUser> = JSON.parse(fs.readFileSync(`${__dirname}${pathToSchema}`).toString());
         const validate: ValidateFunction = ajv.compile(schema)
         if (!validate(req.body)) {
-            console.log(validate.errors);
             if (validate.errors !== undefined && validate.errors !== null) {
                 switch(validate.errors[0].keyword){
                     case "pattern":
