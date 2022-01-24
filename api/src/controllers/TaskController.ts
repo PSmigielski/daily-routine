@@ -40,6 +40,14 @@ class TaskController{
             res.status(200).json({message: "task deleted successfully", task});
         }
     }
+    public async markTaskAsDoneOrUndone(req: Request, res: Response, next: NextFunction){
+        const taskId: string = req.params.taskId;
+        const userId: string = req.user?.id;
+        const task = await Task.markTaskAsDoneOrUndone(taskId, userId).catch(next);
+        if(task){
+            res.status(200).json({message: "task updated successfully", task});
+        }
+    }
 }
 
 export default TaskController;

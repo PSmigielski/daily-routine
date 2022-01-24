@@ -78,7 +78,7 @@ class Task extends Model{
             return deletedTask;
         }
     }
-    public static async getTaskAuthorById(taskId: string){
+    private static async getTaskAuthorById(taskId: string){
         const prisma = Task.getPrisma();
         const task = await prisma.task.findUnique({
             where: {id: taskId},
@@ -89,12 +89,35 @@ class Task extends Model{
         }
         return task;
     }
-    public static async checkOwnerOfTheTask(taskId:string, userId: string){
+    private static async checkOwnerOfTheTask(taskId:string, userId: string){
         const task = await Task.getTaskAuthorById(taskId);
         if(userId !== task?.authorId){
             throw new ApiErrorException("this task does not belong to you", 403);
         }
         return true;
+    }
+    private static async getTaskStatus(taskId: string){
+        const prisma = Task.getPrisma();
+        const task = await prisma.task.findUnique({
+            where: { id: taskId },
+            select: { isDone: true }
+        }).catch(err => { throw PrismaException.createException(err,"Task") })
+        if(!task){
+            throw new ApiErrorException("task with this id does not exist", 404);
+        }
+        return task?.isDone;
+    }
+    public static async markTaskAsDoneOrUndone(taskId: string, userId: string){
+        const prisma = Task.getPrisma();
+        if(await Task.checkOwnerOfTheTask(taskId, userId)){
+            const taskStatus = await Task.getTaskStatus(taskId);
+            const completedAt: Date | null = taskStatus ? null : new Date();
+            const updatedTask = await prisma.task.update({
+                where: { id: taskId },
+                data: { isDone: !taskStatus, completedAt}
+            })
+            return updatedTask;
+        }
     }
 };
 

@@ -29,6 +29,7 @@ model Task {
   hasSubtasks      Boolean  @db.Boolean @default(false)
   createdAt        DateTime 
   completedAt      DateTime?
+  isDone           Boolean @db.Boolean @default(false)
   author           User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId         String   @db.Uuid
 }
