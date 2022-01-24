@@ -61,18 +61,40 @@ class Task extends Model{
     }
     public static async editTask(taskId: string, userId: string,data: {name?: string, description?: string}){
         const prisma = Task.getPrisma();
+        if(await Task.checkOwnerOfTheTask(taskId, userId)){
+            const updatedTask = prisma.task.update({
+                data,
+                where: { id: taskId }
+            }).catch(err => { throw PrismaException.createException(err,"Task") })
+            return updatedTask;
+        }
+    }
+    public static async removeTask(taskId:string, userId: string){
+        const prisma = Task.getPrisma();
+        if(await Task.checkOwnerOfTheTask(taskId, userId)){
+            const deletedTask = await prisma.task.delete({
+                where: { id: taskId }
+            }).catch(err => { throw PrismaException.createException(err,"Task") });
+            return deletedTask;
+        }
+    }
+    public static async getTaskAuthorById(taskId: string){
+        const prisma = Task.getPrisma();
         const task = await prisma.task.findUnique({
-            where: {id: taskId}, 
-            select: {authorId:true}
-        });
+            where: {id: taskId},
+            select: { authorId: true }
+        }).catch(err => { throw PrismaException.createException(err,"Task") });
+        if(!task){
+            throw new ApiErrorException("task with this id does not exist", 404);
+        }
+        return task;
+    }
+    public static async checkOwnerOfTheTask(taskId:string, userId: string){
+        const task = await Task.getTaskAuthorById(taskId);
         if(userId !== task?.authorId){
             throw new ApiErrorException("this task does not belong to you", 403);
         }
-        const updatedTask = prisma.task.update({
-            data,
-            where: { id: taskId }
-        }).catch(err => { throw PrismaException.createException(err,"Task") })
-        return updatedTask
+        return true;
     }
 };
 

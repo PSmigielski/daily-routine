@@ -9,5 +9,6 @@ taskRouter.post("" ,checkJwt ,schemaValidator("/../../schemas/createTask.schema.
 taskRouter.get("" ,checkJwt ,taskController.findAllTasksForUser.bind(taskController));
 taskRouter.get("/:taskId", checkJwt, taskController.findOneTask.bind(taskController));
 taskRouter.put("/:taskId", checkJwt,schemaValidator("/../../schemas/editTask.schema.json") ,taskController.editTask.bind(taskController));
+taskRouter.delete("/:taskId", checkJwt,taskController.removeTask.bind(taskController))
 
 export default taskRouter;

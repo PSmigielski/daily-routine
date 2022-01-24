@@ -32,6 +32,14 @@ class TaskController{
             res.status(200).json({message: "task edited successfully", task});
         }
     }
+    public async removeTask(req: Request, res: Response, next: NextFunction){
+        const taskId: string = req.params.taskId;
+        const userId: string = req.user?.id;
+        const task = await Task.removeTask(taskId, userId).catch(next);
+        if(task){
+            res.status(200).json({message: "task deleted successfully", task});
+        }
+    }
 }
 
 export default TaskController;
