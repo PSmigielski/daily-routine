@@ -32,7 +32,7 @@ class Task extends Model{
     public static async getTasks(userId: string, page: number){
         const prisma = Task.getPrisma();
         const limit = 25;
-        const count = await prisma.task.count();
+        const count = await prisma.task.count().catch(err => { throw PrismaException.createException(err,"Task") });
         const totalPages = Math.floor(count/limit)
         paginationService(page, limit, count);
         const tasks = await prisma.task.findMany({ 
@@ -40,7 +40,7 @@ class Task extends Model{
             skip: page*limit,
             where: { authorId: userId },
             orderBy: { createdAt: "asc"}
-        })
+        }).catch(err => { throw PrismaException.createException(err,"Task") })
         return {
             totalCount: count,
             currentCount: tasks.length,
