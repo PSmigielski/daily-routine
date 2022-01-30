@@ -28,7 +28,7 @@ class SubtaskController{
             }
         }
     }
-    public async editTask(req: Request, res: Response, next: NextFunction){
+    public async editSubtask(req: Request, res: Response, next: NextFunction){
         const { subtaskId } = req.params;
         const { name } = req.body
         if(await Subtask.checkOwnerOfTheSubtask(subtaskId, req.user?.id).catch(next)){
@@ -40,6 +40,19 @@ class SubtaskController{
                 })
             }
         }
+    }
+    public async removeSubtask(req: Request, res: Response, next: NextFunction){
+        const { subtaskId } = req.params;
+        if(await Subtask.checkOwnerOfTheSubtask(subtaskId, req.user?.id).catch(next)){
+            const removedTask = await Subtask.removeSubtask(subtaskId).catch(next);
+            if(removedTask){
+                return res.status(200).json({
+                    message: "Subtask deleted sucessfully!",
+                    removedTask
+                });
+            }
+        }
+        
     }
 }
 

@@ -69,6 +69,12 @@ class Subtask extends Model{
         }).catch(err => { throw PrismaException.createException(err,"Subtask") })
         return updatedSubtask;
     }
+    public static async removeSubtask(subtaskId: string){
+        const primsa = Subtask.getPrisma();
+        const removedSubtask = await primsa.subtask.delete({where: {id: subtaskId}})
+        .catch(err => { throw PrismaException.createException(err,"Subtask") })
+        return removedSubtask;
+    }
 }
 
 export default Subtask;
