@@ -24,11 +24,25 @@ model User {
 
 model Task {
   id               String   @id @default(uuid()) @db.Uuid
-  task_name        String   @db.VarChar(255)
-  task_description String?  @db.Text
-  createdAt        DateTime
+  name             String   @db.VarChar(255)
+  description      String?  @db.Text
+  hasSubtasks      Boolean  @db.Boolean @default(false)
+  createdAt        DateTime 
+  completedAt      DateTime?
+  isDone           Boolean @db.Boolean @default(false)
   author           User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId         String   @db.Uuid
+  Subtasks         Subtask[]
+}
+
+model Subtask{
+  id               String @id @default(uuid()) @db.Uuid
+  name             String   @db.VarChar(255)
+  createdAt        DateTime 
+  completedAt      DateTime?
+  isDone           Boolean @db.Boolean @default(false)
+  task             Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId           String   @db.Uuid
 }
 
 model VerifyRequest {

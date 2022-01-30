@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import addFormats from "ajv-formats";
 import fs from "fs";
 import IUser from "../types/IUser";
-import ApiErrorException from "../Exceptions/ApiErrorException";
+import ApiErrorException from "../exceptions/ApiErrorException";
 import validation from "ajv/dist/vocabularies/validation";
 
 const schemaValidator = (pathToSchema: string) => {
@@ -13,9 +13,12 @@ const schemaValidator = (pathToSchema: string) => {
         const schema: JSONSchemaType<IUser> = JSON.parse(fs.readFileSync(`${__dirname}${pathToSchema}`).toString());
         const validate: ValidateFunction = ajv.compile(schema)
         if (!validate(req.body)) {
-            console.log(validate.errors);
             if (validate.errors !== undefined && validate.errors !== null) {
+                //console.log(validate.errors);
                 switch(validate.errors[0].keyword){
+                    case "minProperties":
+                        throw new ApiErrorException(`${validate.errors[0].params.limit} param/s required`, 400);
+                    break;
                     case "pattern":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} does not match pattern`, 400);
                     break;
