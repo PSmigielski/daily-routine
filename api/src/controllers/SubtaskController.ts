@@ -28,6 +28,19 @@ class SubtaskController{
             }
         }
     }
+    public async editTask(req: Request, res: Response, next: NextFunction){
+        const { subtaskId } = req.params;
+        const { name } = req.body
+        if(await Subtask.checkOwnerOfTheSubtask(subtaskId, req.user?.id).catch(next)){
+            const updatedSubtask = await Subtask.editSubtask(subtaskId, name).catch(next);
+            if(updatedSubtask){
+                return res.status(200).json({
+                    message: "subtasktask has been updated",
+                    updatedSubtask
+                })
+            }
+        }
+    }
 }
 
 export default SubtaskController;

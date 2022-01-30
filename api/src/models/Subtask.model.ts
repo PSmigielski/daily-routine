@@ -1,7 +1,10 @@
-import { Task } from "@prisma/client";
+import ApiErrorException from "../exceptions/ApiErrorException";
 import PrismaException from "../exceptions/PrismaException";
 import paginationService from "../services/paginationService";
 import Model from "./Model";
+import Task from "./Task.model";
+import { Task as TaskType}  from "@prisma/client"
+
 
 class Subtask extends Model{
     private name: string;
@@ -24,11 +27,11 @@ class Subtask extends Model{
         }).catch(err => {throw PrismaException.createException(err, "Subtask")});
         return subtask;
     }
-    public static async getSubtasks(task: Task, page: number){
+    public static async getSubtasks(task: TaskType, page: number){
         const prisma = Subtask.getPrisma();
         const limit = 25;
         const count = await prisma.subtask.count({where:{task}})
-        .catch(err => { throw PrismaException.createException(err,"Task") });
+        .catch(err => { throw PrismaException.createException(err,"Subtask") });
         const totalPages = Math.floor(count/limit)
         paginationService(page, limit, count);
         const subtasks = await prisma.subtask.findMany({
@@ -36,7 +39,7 @@ class Subtask extends Model{
             skip: page*limit,
             where:{task},
             orderBy: { createdAt: "asc"}
-        }).catch(err => { throw PrismaException.createException(err,"Task") })
+        }).catch(err => { throw PrismaException.createException(err,"Subtask") })
         return {
             totalCount: count,
             currentCount: subtasks.length,
@@ -44,6 +47,27 @@ class Subtask extends Model{
             totalPages,
             subtasks
         }
+    }
+    public static async getSubtaskById(subtaskId: string){
+        const prisma = Subtask.getPrisma();
+        const subtask = await prisma.subtask.findUnique({where:{id:subtaskId}})
+        .catch(err => { throw PrismaException.createException(err,"Task") })
+        if(!subtask){
+            throw new ApiErrorException("Subtask with this id does not exist!", 404);
+        }
+        return subtask;
+    }
+    public static async checkOwnerOfTheSubtask(subtaskId: string, userId: string){
+        const subtask = await Subtask.getSubtaskById(subtaskId);
+        return await Task.checkOwnerOfTheTask(subtask.taskId, userId);
+    }
+    public static async editSubtask(subtaskId: string, name: string){
+        const prisma = Subtask.getPrisma();
+        const updatedSubtask = await prisma.subtask.update({
+            where: {id: subtaskId},
+            data: { name }
+        }).catch(err => { throw PrismaException.createException(err,"Subtask") })
+        return updatedSubtask;
     }
 }
 

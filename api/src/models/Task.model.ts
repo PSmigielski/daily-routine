@@ -99,7 +99,7 @@ class Task extends Model{
         }
         return task;
     }
-    private static async checkOwnerOfTheTask(taskId:string, userId: string){
+    public static async checkOwnerOfTheTask(taskId:string, userId: string){
         const task = await Task.getTaskAuthorById(taskId);
         if(userId !== task?.authorId){
             throw new ApiErrorException("this task does not belong to you", 403);
