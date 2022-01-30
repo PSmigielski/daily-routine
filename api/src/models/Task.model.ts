@@ -89,6 +89,16 @@ class Task extends Model{
         }
         return task;
     }
+    public static async getTaskById(taskId: string){
+        const prisma = Task.getPrisma();
+        const task = await prisma.task.findUnique({
+            where: {id: taskId},
+        }).catch(err => { throw PrismaException.createException(err,"Task") });
+        if(!task){
+            throw new ApiErrorException("task with this id does not exist", 404);
+        }
+        return task;
+    }
     private static async checkOwnerOfTheTask(taskId:string, userId: string){
         const task = await Task.getTaskAuthorById(taskId);
         if(userId !== task?.authorId){
@@ -107,16 +117,40 @@ class Task extends Model{
         }
         return task?.isDone;
     }
+    public static async setHasSubtask(taskId: string, status: boolean){
+        const prisma = Task.getPrisma();
+        const updatedTask = await prisma.task.update({
+            where:{id:taskId}, 
+            data:{hasSubtasks: status}
+        }).catch(err => { throw PrismaException.createException(err,"Task") });
+        return updatedTask
+    }
+    public static async checkIfTaskHasSubtasks(taskId: string){
+        const prisma = Task.getPrisma();
+        const task = await prisma.task.findUnique({
+            where:{id:taskId},
+            select:{hasSubtasks:true}
+        });
+        if(!task){
+            throw new ApiErrorException("task with this id does not exist", 404);
+        }
+        console.log(task.hasSubtasks)
+        return task.hasSubtasks;
+    }
     public static async markTaskAsDoneOrUndone(taskId: string, userId: string){
         const prisma = Task.getPrisma();
         if(await Task.checkOwnerOfTheTask(taskId, userId)){
-            const taskStatus = await Task.getTaskStatus(taskId);
-            const completedAt: Date | null = taskStatus ? null : new Date();
-            const updatedTask = await prisma.task.update({
-                where: { id: taskId },
-                data: { isDone: !taskStatus, completedAt}
-            })
-            return updatedTask;
+            if(!await Task.checkIfTaskHasSubtasks(taskId)){
+                const taskStatus = await Task.getTaskStatus(taskId);
+                const completedAt: Date | null = taskStatus ? null : new Date();
+                const updatedTask = await prisma.task.update({
+                    where: { id: taskId },
+                    data: { isDone: !taskStatus, completedAt}
+                })
+                return updatedTask;
+            }else{
+                throw new ApiErrorException("You should complete all subtasks to mark task as done!", 403);
+            }
         }
     }
 };
