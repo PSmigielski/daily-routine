@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import Subtask from "../models/Subtask.model";
 import Task from "../models/Task.model";
-
+import {Task as TaskType, Subtask as SubtaskType} from "@prisma/client";
 class SubtaskController{
     public async create(req: Request, res: Response, next: NextFunction){
         const { name } = req.body;
@@ -51,8 +51,15 @@ class SubtaskController{
                     removedTask
                 });
             }
+        }   
+    }
+    public async markSubtaskAsDoneOrUndone(req: Request, res: Response, next: NextFunction){
+        const { subtaskId } = req.params;
+        const userId: string = req.user?.id;
+        const data = await Subtask.markTaskAsDoneOrUndone(subtaskId, userId).catch(next);
+        if(data){
+            res.status(200).json({message: "subtask updated successfully", data});
         }
-        
     }
 }
 

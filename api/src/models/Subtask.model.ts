@@ -75,6 +75,34 @@ class Subtask extends Model{
         .catch(err => { throw PrismaException.createException(err,"Subtask") })
         return removedSubtask;
     }
+    private static async checkIfAllSubtaskAreDone(taskId: string){
+        const prisma = Subtask.getPrisma();
+        const allSubtasksInTaskCount = await prisma.subtask.count({where: {taskId}})
+        .catch(err => { throw PrismaException.createException(err,"Subtask") });
+        const allDoneSubtaskInTaskCount = await prisma.subtask.count({where: {taskId, isDone: true}})
+        .catch(err => { throw PrismaException.createException(err,"Subtask") });
+        return allDoneSubtaskInTaskCount === allSubtasksInTaskCount;
+    }
+    public static async markTaskAsDoneOrUndone(subtaskId: string, userId: string){
+        const prisma = Subtask.getPrisma();
+        const subtask = await Subtask.getSubtaskById(subtaskId)
+        if(await Task.checkOwnerOfTheTask(subtask.taskId, userId)){
+            const subtaskStatus = subtask.isDone;
+            const completedAt: Date | null = subtaskStatus ? null : new Date();
+            const updatedSubtask = await prisma.subtask.update({
+                where: { id: subtaskId },
+                data: { isDone: !subtaskStatus, completedAt}
+            }).catch(err => { throw PrismaException.createException(err,"Subtask") })
+            const isAllSubtasksDone = await Subtask.checkIfAllSubtaskAreDone(subtask.taskId);
+            if(isAllSubtasksDone){
+                const task = await Task.markTaskAsDoneOrUndone(subtask.taskId, userId, isAllSubtasksDone);
+                return {updatedSubtask, task};
+            }else{
+                const task = await Task.markTaskAsDoneOrUndone(subtask.taskId, userId, true);
+            }
+            return updatedSubtask;
+        }
+    }
 }
 
 export default Subtask;

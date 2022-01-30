@@ -10,5 +10,6 @@ subtaskRouter.post("/:taskId", checkJwt, schemaValidator("/../../schemas/subtask
 subtaskRouter.put("/:subtaskId", checkJwt, schemaValidator("/../../schemas/subtask.schema.json"), subtaskController.editSubtask.bind(subtaskController));
 subtaskRouter.get("/:taskId", checkJwt, subtaskController.getSubtasks.bind(subtaskController));
 subtaskRouter.delete("/:subtaskId", checkJwt, subtaskController.removeSubtask.bind(subtaskController));
+subtaskRouter.put("/mark/:subtaskId", checkJwt, subtaskController.markSubtaskAsDoneOrUndone.bind(subtaskController));
 
 export default subtaskRouter;
