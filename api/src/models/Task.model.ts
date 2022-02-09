@@ -1,3 +1,4 @@
+import e from "express";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import PrismaException from "../exceptions/PrismaException";
 import paginationService from "../services/paginationService";
@@ -66,9 +67,19 @@ class Task extends Model{
         }
         return task;
     }
-    public static async editTask(taskId: string, userId: string,data: {name?: string, description?: string}){
+    public static async editTask(taskId: string, userId: string,data: {
+        name?: string, 
+        description?: string, 
+        repeatEvery?: number,
+        lastRepetation?: Date | null
+    }){
         const prisma = Task.getPrisma();
         if(await Task.checkOwnerOfTheTask(taskId, userId)){
+            if(data.repeatEvery == 0){
+                data.lastRepetation = null;
+            }else{
+                data.lastRepetation = new Date();
+            }
             const updatedTask = prisma.task.update({
                 data,
                 where: { id: taskId }
@@ -145,11 +156,13 @@ class Task extends Model{
     }
     private static async changeTaskStatus(taskId: string){
         const prisma = Task.getPrisma();
+        const task = await Task.getTaskById(taskId);
         const taskStatus = await Task.getTaskStatus(taskId);
         const completedAt: Date | null = taskStatus ? null : new Date();
+        const lastRepetation: Date | null = task.repeatEvery != 0 && !taskStatus ? new Date() : null;
         const updatedTask = await prisma.task.update({
             where: { id: taskId },
-            data: { isDone: !taskStatus, completedAt}
+            data: { isDone: !taskStatus, completedAt, lastRepetation}
         }).catch(err => { throw PrismaException.createException(err,"Task") })
         return updatedTask;
     }

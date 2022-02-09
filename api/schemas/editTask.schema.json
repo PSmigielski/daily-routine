@@ -11,6 +11,12 @@
             "type":"string",
             "minLength": 1,
             "maxLength": 255
+        },
+        "repeatEvery":{
+            "type":"integer",
+            "minimum": 0,
+            "maximum": 30,
+            "default": 0
         }
     },
     "additionalProperties": false

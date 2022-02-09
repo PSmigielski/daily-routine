@@ -26,7 +26,7 @@ class TaskController{
     public async editTask(req: Request, res: Response, next: NextFunction){
         const taskId: string = req.params.taskId;
         const userId: string = req.user?.id;
-        const data: {name?: string, description?: string} = req.body;
+        const data: {name?: string, description?: string, repeatEvery: number} = req.body;
         const task = await Task.editTask(taskId, userId, data).catch(next);
         if(task){
             res.status(200).json({message: "task edited successfully", task});
