@@ -5,6 +5,7 @@ import fs from "fs";
 import IUser from "../types/IUser";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import validation from "ajv/dist/vocabularies/validation";
+import def from "ajv/dist/vocabularies/applicator/additionalItems";
 
 const schemaValidator = (pathToSchema: string) => {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -14,8 +15,14 @@ const schemaValidator = (pathToSchema: string) => {
         const validate: ValidateFunction = ajv.compile(schema)
         if (!validate(req.body)) {
             if (validate.errors !== undefined && validate.errors !== null) {
-                //console.log(validate.errors);
+                console.log(validate.errors);
                 switch(validate.errors[0].keyword){
+                    case "minimum":
+                        throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} must be minimum ${validate.errors[0].params.limit}`, 400);
+                    break;
+                    case "maximum":
+                        throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} can be up to ${validate.errors[0].params.limit}`, 400);
+                    break;
                     case "minProperties":
                         throw new ApiErrorException(`${validate.errors[0].params.limit} param/s required`, 400);
                     break;
@@ -40,6 +47,8 @@ const schemaValidator = (pathToSchema: string) => {
                     case "format":
                         throw new ApiErrorException(`must match ${validate.errors[0].params.format} format`, 400);
                     break;
+                    default:
+                        throw new ApiErrorException(`Something is wrong with your request`, 500);
                 }
             }
         }
