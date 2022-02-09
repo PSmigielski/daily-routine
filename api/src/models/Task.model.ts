@@ -7,11 +7,15 @@ class Task extends Model{
     private name: string;
     private description: string | undefined;
     private createdAt: Date;
+    private repeatEvery: number;
+    private lastRepetation: Date | undefined;
     private userId: string;
-    constructor(name: string, userId:string, description?: string | undefined){
+    constructor(name: string, userId:string, repeatEvery: number, description?: string | undefined, ){
         super();
         this.name = name;
         this.createdAt = new Date();
+        this.repeatEvery = repeatEvery;
+        this.lastRepetation = this.repeatEvery != 0 ? new Date() : undefined;
         this.userId = userId;
         if(typeof description === "string"){
             this.description = description;
@@ -25,8 +29,11 @@ class Task extends Model{
                 createdAt: this.createdAt,
                 description: this.description,
                 authorId: this.userId,
+                lastRepetation: this.lastRepetation,
+                repeatEvery: this.repeatEvery
             }
         }).catch(err => { throw PrismaException.createException(err,"Task") });
+        console.log(task);
         return task;
     }
     public static async getTasks(userId: string, page: number){
