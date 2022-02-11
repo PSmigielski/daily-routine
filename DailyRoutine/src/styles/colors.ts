@@ -1,5 +1,5 @@
-export const SECONDARY = '#1779ba';
-export const BACKGROUND = '#767676';
+export const SECONDARY = '#23222A';
+export const BACKGROUND = '#17161D';
 export const CTA = '#8675F0';
 export const ACCENT = '#000000';
 export const WARNING = '#F90000';

@@ -1,7 +1,8 @@
 import {scaleFont} from './mixins';
 
-export const FONT_FAMILY_DEFAULT = 'Manrope';
-export const FONT_FAMILY_DECORATIVE = 'PoetsenOne';
+export const FONT_FAMILY_DEFAULT = 'Manrope-Regular';
+export const FONT_FAMILY_DEFAULT_BOLD = 'Manrope-Bold';
+export const FONT_FAMILY_DECORATIVE = 'PoetsenOne-Regular';
 
 export const FONT_WEIGHT_REGULAR = '400';
 export const FONT_WEIGHT_BOLD = '700';

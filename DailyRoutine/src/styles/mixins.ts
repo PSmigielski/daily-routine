@@ -36,9 +36,9 @@ export function margin(
 
 export function padding(
   top: number,
-  right: number,
-  bottom: number,
-  left: number,
+  right?: number,
+  bottom?: number,
+  left?: number,
 ) {
   return dimensions(top, right, bottom, left, 'padding');
 }
