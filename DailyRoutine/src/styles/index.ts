@@ -14,6 +14,12 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-around',
     flexDirection: 'column',
   },
+  startPageWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    flexDirection: 'column',
+  },
   startPageText: {
     fontFamily: Typography.FONT_FAMILY_DEFAULT,
     fontSize: Typography.FONT_SIZE_24,
@@ -70,7 +76,7 @@ export const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
   },
-  appView: {
+  appWrapper: {
     backgroundColor: Colors.BACKGROUND,
     textAlign: 'center',
     flex: 1,
