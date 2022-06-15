@@ -1,16 +1,22 @@
 import { PrismaClient } from ".prisma/client";
-import nodemailer from "nodemailer";
+import nodemailer, { TransportOptions } from "nodemailer";
 import IMailContent from "../types/IMailContent";
 class MailerService {
     public static async sendMail(mailContent: IMailContent) {
         const prisma: PrismaClient = new PrismaClient();
         let transporter = nodemailer.createTransport({
-            service: "gmail",
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
             auth: {
-                user: process.env.EMAIL_LOGIN,
-                pass: process.env.EMAIL_PASSWORD
+                type: "OAuth2",
+                user: process.env.APP_EMAIL,
+                clientId: process.env.CLIENT_ID,
+                clientSecret: process.env.CLIENT_SECRET,
+                refreshToken: process.env.REFRESH_TOKEN,
+                accessToken: process.env.ACCESS_TOKEN,
             },
-        });
+        } as TransportOptions);
         let info = await transporter.sendMail(mailContent);
     }
     public static sendVerificationMail(email: string, id: string){

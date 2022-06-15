@@ -1,15 +1,14 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
-import PrismaMeta from "../types/PrimsaMeta";
-import meta from "../types/PrimsaMeta";
+import Meta from "../types/Meta";
 
 class PrismaException extends Error{
     private statusCode: number;
     private prismaErrorType: string;
     private prismaMessage: string;
     private prismaErrorCode?: string | undefined;
-    private prismaMetadata?: meta | undefined;
+    private prismaMetadata?: Record<string,unknown> | undefined;
     private prismaErrorEntity: string;
-    constructor(prismaErrorEntity:string ,prismaErrorType:string ,prismaMessage: string,prismaErrorCode?: string, prismaMetadata?: meta, ){
+    constructor(prismaErrorEntity:string ,prismaErrorType:string ,prismaMessage: string,prismaErrorCode?: string, prismaMetadata?:Record<string,unknown> ){
         super();
         this.statusCode = 500;
         this.prismaMessage = prismaMessage;
@@ -28,7 +27,13 @@ class PrismaException extends Error{
                 switch(this.prismaErrorCode){
                     case "P2002":
                         this.statusCode = 403;
-                        errorMessage = `${this.prismaErrorEntity} with this ${this.prismaMetadata?.target[0]} exist`
+                        if (Array.isArray(this.prismaMetadata?.target)) {
+                            errorMessage = `${
+                                this.prismaErrorEntity
+                            } with this ${
+                                this.prismaMetadata?.target[0] as string
+                            } exist`;
+                        }
                         break;
                     case "P2025":
                         this.statusCode = 404;
@@ -53,10 +58,10 @@ class PrismaException extends Error{
     }
     public static createException(err: Error, entityName:string){
         let errCode:string | undefined = undefined;
-        let errMeta: PrismaMeta| undefined = undefined;
+        let errMeta: Record<string, unknown> | undefined = undefined;
         if(err instanceof PrismaClientKnownRequestError){
             errCode = err.code;
-            errMeta = err.meta as PrismaMeta;
+            errMeta = err.meta as Record<string, unknown>;
         }
         return new PrismaException(entityName, err.constructor.name, err.message, errCode, errMeta);     
     }
