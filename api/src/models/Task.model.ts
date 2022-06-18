@@ -23,7 +23,6 @@ class Task extends Model{
         }
     }
     public async createTask(){
-        
         const task = await this.prisma.task.create({
             data: {
                 name: this.name,
@@ -38,7 +37,6 @@ class Task extends Model{
         return task;
     }
     public static async getTasks(userId: string, page: number){
-        
         const limit = 25;
         const count = await this.prisma.task.count()
         .catch(err => { throw PrismaException.createException(err,"Task") });
@@ -59,7 +57,6 @@ class Task extends Model{
         };
     }
     public static async getTask(taskId: string){
-        
         const task = await this.prisma.task.findUnique({ where:{ id: taskId }})
         .catch(err => { throw PrismaException.createException(err,"Task") })
         if(!task){
@@ -73,7 +70,6 @@ class Task extends Model{
         repeatEvery?: number,
         lastRepetition?: Date | null
     }){
-        
         if(await Task.checkOwnerOfTheTask(taskId, userId)){
             if(data.repeatEvery == 0){
                 data.lastRepetition = null;
@@ -88,7 +84,6 @@ class Task extends Model{
         }
     }
     public static async removeTask(taskId:string, userId: string){
-        
         if(await Task.checkOwnerOfTheTask(taskId, userId)){
             const deletedTask = await this.prisma.task.delete({
                 where: { id: taskId }
@@ -97,7 +92,6 @@ class Task extends Model{
         }
     }
     private static async getTaskAuthorById(taskId: string){
-        
         const task = await this.prisma.task.findUnique({
             where: {id: taskId},
             select: { authorId: true }
@@ -108,7 +102,6 @@ class Task extends Model{
         return task;
     }
     public static async getTaskById(taskId: string){
-        
         const task = await this.prisma.task.findUnique({
             where: {id: taskId},
         }).catch(err => { throw PrismaException.createException(err,"Task") });
@@ -125,7 +118,6 @@ class Task extends Model{
         return true;
     }
     private static async getTaskStatus(taskId: string){
-        
         const task = await this.prisma.task.findUnique({
             where: { id: taskId },
             select: { isDone: true }
@@ -136,7 +128,6 @@ class Task extends Model{
         return task?.isDone;
     }
     public static async setHasSubtask(taskId: string, status: boolean){
-        
         const updatedTask = await this.prisma.task.update({
             where:{id:taskId}, 
             data:{hasSubtasks: status}
@@ -144,7 +135,6 @@ class Task extends Model{
         return updatedTask
     }
     public static async checkIfTaskHasSubtasks(taskId: string){
-        
         const task = await this.prisma.task.findUnique({
             where:{id:taskId},
             select:{hasSubtasks:true}
@@ -155,7 +145,6 @@ class Task extends Model{
         return task.hasSubtasks;
     }
     private static async changeTaskStatus(taskId: string){
-        
         const task = await Task.getTaskById(taskId);
         const taskStatus = await Task.getTaskStatus(taskId);
         const completedAt: Date | null = taskStatus ? null : new Date();
@@ -167,7 +156,6 @@ class Task extends Model{
         return updatedTask;
     }
     public static async markTaskAsDoneOrUndone(taskId: string, userId: string, areAllSubtaskDone: boolean = false){
-        
         if(await Task.checkOwnerOfTheTask(taskId, userId)){
             if(await Task.checkIfTaskHasSubtasks(taskId)){
                 if(areAllSubtaskDone){
