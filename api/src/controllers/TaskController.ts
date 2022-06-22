@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import checkJwt from "../middleware/checkJwt";
 import schemaValidator from "../middleware/schemaValidator";
 import Task from "../models/Task.model";
+import ITask from "../types/ITask";
 import { Methods } from "../types/Methods";
 import Controller from "./Controller";
 
@@ -55,15 +56,7 @@ class TaskController extends Controller {
         },
     ];
     public async create(req: Request, res: Response, next: NextFunction) {
-        const {
-            name,
-            description,
-            repeatEvery = 0,
-        }: {
-            name: string;
-            description: string | undefined;
-            repeatEvery: number | undefined;
-        } = req.body;
+        const { name, description, repeatEvery = 0 } : ITask = req.body;
         const userId = req.user?.id;
         const task = await new Task(name, userId, repeatEvery, description)
             .createTask()

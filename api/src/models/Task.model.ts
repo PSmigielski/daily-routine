@@ -33,7 +33,6 @@ class Task extends Model{
                 repeatEvery: this.repeatEvery
             }
         }).catch(err => { throw PrismaException.createException(err,"Task") });
-        console.log(task);
         return task;
     }
     public static async getTasks(userId: string, page: number){

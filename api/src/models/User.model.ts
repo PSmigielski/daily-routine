@@ -47,23 +47,24 @@ class User extends Model {
             });
     }
     public static async getUserById(userId: string) {
-        if (userId == undefined) {
+        if (userId) {
+            const user = await this.prisma.user
+                .findUnique({
+                    where: { id: userId },
+                })
+                .catch((err) => {
+                    throw PrismaException.createException(err, "User");
+                });
+                if (user) {
+                    return user;
+                } else {
+                    throw new ApiErrorException(
+                        "User with this id does not exist!",
+                        404,
+                    );
+                }
+        }else{
             throw new ApiErrorException("undefined user id", 404);
-        }
-        const user = await this.prisma.user
-            .findUnique({
-                where: { id: userId },
-            })
-            .catch((err) => {
-                throw PrismaException.createException(err, "User");
-            });
-        if (user == undefined) {
-            throw new ApiErrorException(
-                "User with this id does not exist!",
-                404,
-            );
-        } else {
-            return user;
         }
     }
     public static async getUserByEmail(email: string) {

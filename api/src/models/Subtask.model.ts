@@ -5,7 +5,6 @@ import Model from "./Model";
 import Task from "./Task.model";
 import { Task as TaskType}  from "@prisma/client"
 
-
 class Subtask extends Model{
     private name: string;
     private createdAt: Date;
@@ -17,7 +16,6 @@ class Subtask extends Model{
         this.taskId = taskId;
     }
     public async createSubtask(){
-        
         const subtask = await this.prisma.subtask.create({
             data: {
                 name: this.name,
@@ -28,7 +26,6 @@ class Subtask extends Model{
         return subtask;
     }
     public static async getSubtasks(task: TaskType, page: number){
-        
         const limit = 25;
         const count = await this.prisma.subtask.count({where:{task}})
         .catch(err => { throw PrismaException.createException(err,"Subtask") });
@@ -49,7 +46,6 @@ class Subtask extends Model{
         }
     }
     public static async getSubtaskById(subtaskId: string){
-        
         const subtask = await this.prisma.subtask.findUnique({where:{id:subtaskId}})
         .catch(err => { throw PrismaException.createException(err,"Task") })
         if(!subtask){
@@ -62,7 +58,6 @@ class Subtask extends Model{
         return await Task.checkOwnerOfTheTask(subtask.taskId, userId);
     }
     public static async editSubtask(subtaskId: string, name: string){
-        
         const updatedSubtask = await this.prisma.subtask.update({
             where: {id: subtaskId},
             data: { name }
@@ -74,8 +69,7 @@ class Subtask extends Model{
         .catch(err => { throw PrismaException.createException(err,"Subtask") })
         return removedSubtask;
     }
-    private static async checkIfAllSubtaskAreDone(taskId: string){
-        
+    private static async checkIfAllSubtaskAreDone(taskId: string){   
         const allSubtasksInTaskCount = await this.prisma.subtask.count({where: {taskId}})
         .catch(err => { throw PrismaException.createException(err,"Subtask") });
         const allDoneSubtaskInTaskCount = await this.prisma.subtask.count({where: {taskId, isDone: true}})
@@ -83,7 +77,6 @@ class Subtask extends Model{
         return allDoneSubtaskInTaskCount === allSubtasksInTaskCount;
     }
     public static async markTaskAsDoneOrUndone(subtaskId: string, userId: string){
-        
         const subtask = await Subtask.getSubtaskById(subtaskId)
         if(await Task.checkOwnerOfTheTask(subtask.taskId, userId)){
             const subtaskStatus = subtask.isDone;

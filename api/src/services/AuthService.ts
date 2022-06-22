@@ -14,9 +14,9 @@ class AuthService extends Service {
         const user = new User(email, login, password);
         const data = await user.createUser().catch(this.throwError);
         if (data) {
-            const request = await VerifyRequest.create(data.id).catch(
-                this.throwError,
-            );
+            const request = await new VerifyRequest(data.id)
+                .create()
+                .catch(this.throwError);
             if (request) {
                 MailerService.sendVerificationMail(email, request.id);
                 return data;
@@ -31,7 +31,7 @@ class AuthService extends Service {
     }
     public async login({
         login,
-        password,
+        password
     }: {
         login: string;
         password: string;
