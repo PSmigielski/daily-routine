@@ -23,7 +23,7 @@ class RefreshToken extends Model {
         
         const refTokens = await this.prisma.refreshToken.findMany({
             where: { userId },
-            include:{ user:{ select:{ login: true, role:true } } }
+            include:{ user:{ select:{ login: true} } }
         }).catch(err => { throw PrismaException.createException(err,"RefreshToken") });
         return refTokens
     }

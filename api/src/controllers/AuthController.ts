@@ -1,15 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import checkJwt from "../middleware/checkJwt";
-import checkRole from "../middleware/checkRole";
 import checkUuid from "../middleware/checkUuid";
 import schemaValidator from "../middleware/schemaValidator";
-import ResetPasswordRequest from "../models/ResetPasswordRequest.model";
 import User from "../models/User.model";
-import VerifyRequest from "../models/VerifyRequest.model";
-import MailerService from "../services/MailerService";
+import AuthService from "../services/AuthService";
 import { Methods } from "../types/Methods";
-import Roles from "../types/Roles";
 import Controller from "./Controller";
 class AuthController extends Controller {
     constructor() {
@@ -69,12 +65,6 @@ class AuthController extends Controller {
             ],
         },
         {
-            path: "/verify/:requestId",
-            method: Methods.GET,
-            handler: this.verify,
-            localMiddleware: [checkUuid("requestId")],
-        },
-        {
             path: "/edit/password",
             method: Methods.PUT,
             handler: this.editPassword,
@@ -93,42 +83,29 @@ class AuthController extends Controller {
             ],
         },
         {
-            path: "/edit/role/:id",
-            method: Methods.PUT,
-            handler: this.changeRole,
+            path: "/account",
+            method: Methods.DELETE,
+            handler: this.removeAccount,
             localMiddleware: [
-                checkUuid("id"),
-                checkJwt,
-                checkRole(Roles.ADMIN),
-                schemaValidator("/../../schemas/changeRole.schema.json"),
+                checkJwt
             ],
-        },
+        }
     ];
 
     public async register(req: Request, res: Response, next: NextFunction) {
         const { email, login, password } = req.body;
-        const user = new User(email, login, password);
-        const data = await user.createUser().catch(next);
+        const data = await new AuthService()
+            .createAccount(email, login, password)
+            .catch(next);
         if (data) {
-            const request = await VerifyRequest.create(data.id).catch(next);
-            if (request) {
-                MailerService.sendVerificationMail(email, request.id);
-                return res.json(data);
-            }
-        }
-    }
-    public async verify(req: Request, res: Response, next: NextFunction) {
-        const { requestId } = req.params;
-        const result = await User.verify(requestId).catch(next);
-        if (result) {
-            return res
-                .status(202)
-                .json({ message: "Email has been verified successfully" });
+            return res.status(201).json(data);
         }
     }
     public async login(req: Request, res: Response, next: NextFunction) {
         const { login, password } = req.body;
-        const result = await User.login({ login, password }).catch(next);
+        const result = await new AuthService()
+            .login({ login, password })
+            .catch(next);
         if (result) {
             const tokenExp: Date = new Date();
             tokenExp.setTime((result.jwt.exp as number) * 1000);
@@ -147,8 +124,19 @@ class AuthController extends Controller {
                 .json({ message: "user logged in" });
         }
     }
+    public async verify(req: Request, res: Response, next: NextFunction) {
+        const { requestId } = req.params;
+        const result = await new AuthService().verify(requestId).catch(next);
+        if (result) {
+            return res
+                .status(202)
+                .json({ message: "Email has been verified successfully" });
+        }
+    }
     public async logout(req: Request, res: Response, next: NextFunction) {
-        const result = await User.logout(req.user?.refTokenId).catch(next);
+        const result = await new AuthService()
+            .logout(req.user?.refTokenId)
+            .catch(next);
         if (result) {
             req.user = undefined;
             return res
@@ -164,9 +152,9 @@ class AuthController extends Controller {
         next: NextFunction,
     ) {
         if (req.cookies.REFRESH_TOKEN != undefined) {
-            const newToken = await User.refreshBearerToken(
-                req.cookies.REFRESH_TOKEN.token,
-            ).catch(next);
+            const newToken = await new AuthService()
+                .refreshBearerToken(req.cookies.REFRESH_TOKEN.token)
+                .catch(next);
             if (newToken !== undefined) {
                 const tokenExp: Date = new Date();
                 tokenExp.setTime((newToken?.exp as number) * 1000);
@@ -188,37 +176,30 @@ class AuthController extends Controller {
         next: NextFunction,
     ) {
         const { email } = req.body;
-        const user = await User.getUserByEmail(email).catch(next);
-        if (user) {
-            const request = await ResetPasswordRequest.create(user.id).catch(
-                next,
-            );
-            if (request) {
-                MailerService.sendResetRequest(email, request.id);
-                return res.json({ message: "reset request has been sent" });
-            }
-        } else {
-            throw new ApiErrorException(
-                "User with this email does not exist!",
-                404,
-            );
+        const result = await new AuthService()
+            .sendResetRequest(email)
+            .catch(next);
+        if (result) {
+            return res.json({ message: "reset request has been sent" });
         }
     }
     public async reset(req: Request, res: Response, next: NextFunction) {
         const { newPassword } = req.body;
         const { requestId } = req.params;
-        const result = await User.resetPassword(newPassword, requestId).catch(
-            next,
-        );
+        const result = await new AuthService()
+            .resetPassword(newPassword, requestId)
+            .catch(next);
         if (result) {
             res.json({ message: "Password reset successfully" });
         }
     }
     public async editLogin(req: Request, res: Response, next: NextFunction) {
         const { login } = req.body;
-        const result = await User.editLogin(login, req.user?.id);
+        const result = await User.updateLogin(login, req.user?.id);
         if (result) {
-            const result2 = await User.logout(req.user?.refTokenId).catch(next);
+            const result2 = await new AuthService()
+                .logout(req.user?.refTokenId)
+                .catch(next);
             if (result2) {
                 return res
                     .clearCookie("BEARER")
@@ -233,29 +214,20 @@ class AuthController extends Controller {
     }
     public async editPassword(req: Request, res: Response, next: NextFunction) {
         const { password, newPassword } = req.body;
-        const result = await User.editPassword(
-            password,
-            newPassword,
-            req.user?.id,
-        ).catch(next);
+        const result = await new AuthService()
+            .editPassword(password, newPassword, req.user?.id)
+            .catch(next);
         if (result) {
             return res
                 .status(202)
                 .json({ message: "password updated successfully" });
         }
     }
-    public async changeRole(req: Request, res: Response, next: NextFunction) {
-        const { role } = req.body;
-        if (req.params.id == req.user?.id) {
-            return next(new ApiErrorException("You can't change your own role", 403));
-        } else {
-            const result = await User.changeRole(role, req.params.id).catch(next);
-            if (result) {
-                return res.status(202).json({ message: `User role has been changed to ${role}` });
-            }
-        }
-    }
-    public async removeAccount(req: Request, res: Response, next: NextFunction) {
+    public async removeAccount(
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ) {
         const removedUser = await User.remove(req.user?.id).catch(next);
         if (removedUser) {
             return res.status(202).json({ message: "User has been removed" });
