@@ -28,7 +28,7 @@ model Task {
   description      String?  @db.Text
   hasSubtasks      Boolean  @db.Boolean @default(false)
   createdAt        DateTime 
-  lastRepetation   DateTime?
+  lastRepetition   DateTime?
   repeatEvery      Int      @db.Integer @default(0)
   completedAt      DateTime?
   isDone           Boolean @db.Boolean @default(false)
