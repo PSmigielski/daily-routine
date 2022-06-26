@@ -35,6 +35,7 @@ model Task {
   author           User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId         String   @db.Uuid
   Subtasks         Subtask[]
+  intervalId       Int? @db.Integer
 }
 
 model Subtask{

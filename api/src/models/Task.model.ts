@@ -1,4 +1,3 @@
-import e from "express";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import PrismaException from "../exceptions/PrismaException";
 import paginationService from "../services/paginationService";
@@ -33,6 +32,8 @@ class Task extends Model{
                 repeatEvery: this.repeatEvery
             }
         }).catch(err => { throw PrismaException.createException(err,"Task") });
+        console.log(task.id);
+        Task.setIntervalForTask(this.repeatEvery, task.id);
         return task;
     }
     public static async getTasks(userId: string, page: number){
@@ -153,6 +154,36 @@ class Task extends Model{
             data: { isDone: !taskStatus, completedAt, lastRepetition: lastRepetition}
         }).catch(err => { throw PrismaException.createException(err,"Task") })
         return updatedTask;
+    }
+    private static async setIntervalForTask(days: number, taskId:string){
+        const intervalObj = setInterval(async (taskId: string)=>{
+            if(await Task.checkIfTaskHasSubtasks(taskId)){
+                Task.markAllSubtaskAsUndone(taskId);
+            }else{
+                Task.markTaskAsUndone(taskId)
+            }
+            console.log("task has been refreshed")
+        }, days*1000 * 60 * 60 * 24, taskId);
+        const intervalId = intervalObj[Symbol.toPrimitive]();
+        const task = await this.prisma.task.update({
+            where: {id: taskId},
+            data: {intervalId}
+        })
+        return task;
+    }
+    private static async markAllSubtaskAsUndone(taskId: string){
+        const data = await this.prisma.subtask.updateMany({
+            where: {taskId},
+            data: {isDone: false}
+        })
+        return data;
+    }
+    private static async markTaskAsUndone(taskId: string){
+        const subtask = await this.prisma.task.update({
+            where: {id: taskId},
+            data: {isDone: false}
+        }).catch(err => { throw PrismaException.createException(err,"Task") });
+        return subtask;
     }
     public static async markTaskAsDoneOrUndone(taskId: string, userId: string, areAllSubtaskDone: boolean = false){
         if(await Task.checkOwnerOfTheTask(taskId, userId)){
