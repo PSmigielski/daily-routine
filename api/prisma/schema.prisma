@@ -20,6 +20,14 @@ model User {
   VerifyRequest        VerifyRequest?
   RefreshToken         RefreshToken[]
   ResetPasswordRequest ResetPasswordRequest[]
+  countryId            String                 @db.Uuid 
+  country              Country                @relation(fields: [countryId], references: [id])
+}
+model Country {
+  id               String   @id @db.Uuid @default(uuid())
+  name             String   @db.VarChar(56)
+  timezone         Int      @db.Integer
+  user             User[]   
 }
 
 model Task {
