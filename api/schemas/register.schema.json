@@ -14,12 +14,17 @@
         "password": {
             "type": "string",
             "pattern": "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,100}$"
+        },
+        "countryId": {
+            "type": "string",
+            "format": "uuid"
         }
     },
     "required": [
         "email",
         "login",
-        "password"
+        "password",
+        "countryId"
     ],
     "additionalProperties": false
 }

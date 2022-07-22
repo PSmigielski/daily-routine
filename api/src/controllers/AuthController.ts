@@ -93,9 +93,9 @@ class AuthController extends Controller {
     ];
 
     public async register(req: Request, res: Response, next: NextFunction) {
-        const { email, login, password } = req.body;
+        const { email, login, password, countryId } = req.body;
         const data = await new AuthService()
-            .createAccount(email, login, password)
+            .createAccount(email, login, password, countryId)
             .catch(next);
         if (data) {
             return res.status(201).json(data);
