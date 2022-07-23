@@ -1,4 +1,5 @@
 import PrismaException from "../exceptions/PrismaException";
+import ITimezone from "../types/ITimezone";
 import Model from "./Model";
 
 class Timezone extends Model{
@@ -11,12 +12,8 @@ class Timezone extends Model{
         this.offset = offset;
         this.countryId = countryId;
     }
-    public async create(){
-        const timezone = await this.prisma.timezone.create({data:{
-            name: this.name, 
-            gmtOffset: this.offset, 
-            countryId: this.countryId}
-        }).catch((err) => {
+    public static async create(data: Array<ITimezone>){
+        const timezone = await this.prisma.timezone.createMany({data}).catch((err) => {
             throw PrismaException.createException(err, "Timezone");
         });
     }

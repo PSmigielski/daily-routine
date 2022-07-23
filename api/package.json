@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./dist/index.js",
+    "fetchData": "ts-node ./src/commands/fetchCountriesAndTimezones.ts",
     "dev": "nodemon src/index.ts"
   },
   "author": "",
@@ -20,7 +21,8 @@
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1",
-    "nodemailer": "^6.7.1"
+    "nodemailer": "^6.7.1",
+    "puppeteer": "^15.5.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.2",

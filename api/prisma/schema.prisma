@@ -29,8 +29,8 @@ model Country {
 model Timezone {
   id              String   @id @db.Uuid @default(uuid()) 
   name            String   @unique @db.VarChar(100)
-  gmtOffset       Int      @db.Integer
-  country         Country  @relation(fields: [countryId], references: [id])
+  gmtOffset       Float    @db.DoublePrecision
+  country         Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
   countryId       String   @db.Uuid
 }
 

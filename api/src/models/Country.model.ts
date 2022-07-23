@@ -1,16 +1,13 @@
 import e from "express";
 import PrismaException from "../exceptions/PrismaException";
+import ICountry from "../types/ICountry";
 import Model from "./Model";
 
 class Country extends Model{
-    private name: string;
-    public constructor(name: string ){
-        super();
-        this.name = name;
-    }
-    public async creaateCountry(){
+
+    public static async createCountries(data: Array<ICountry>){
         const country = await this.prisma.country
-            .create({ data: { name: this.name } })
+            .createMany({ data })
             .catch((err) => {
                 throw PrismaException.createException(err, "Country");
             });

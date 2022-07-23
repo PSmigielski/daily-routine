@@ -6,8 +6,8 @@ class TimezoneService extends Service{
     constructor(){
         super();
     }
-    public async create({name, offset, countryId}: ITimezone){
-        const timezone = new Timezone(name, offset, countryId).create().catch(this.throwError);
+    public async createMany(data: Array<ITimezone>){
+        const timezone = Timezone.create(data).catch(this.throwError);
         return timezone;
     }
 }
