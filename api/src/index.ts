@@ -7,11 +7,13 @@ import prismaErrorHandler from "./middleware/prismaErrorHandler";
 import errorHandler from "./middleware/errorHandler";
 import SubtaskController from "./controllers/SubtaskController";
 import TaskController from "./controllers/TaskController";
+import CountryController from "./controllers/CountryController";
 
 const controllers = [
     new AuthController(),
     new SubtaskController(),
-    new TaskController()
+    new TaskController(),
+    new CountryController()
 ];
 const globalMiddleware = [cookieParser(), json(), cors({ credentials: true, origin: process.env.FRONTEND_URL })];
 const errorHandlers = [prismaErrorHandler, errorHandler];

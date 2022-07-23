@@ -1,6 +1,5 @@
 interface ICountry{
-    name: string,
-    timezone: number
+    name: string
 }
 
 export default ICountry;

@@ -4,15 +4,13 @@ import Model from "./Model";
 
 class Country extends Model{
     private name: string;
-    private timezone: number;
-    public constructor(name: string, timezone:number){
+    public constructor(name: string ){
         super();
         this.name = name;
-        this.timezone = timezone;
     }
     public async creaateCountry(){
         const country = await this.prisma.country
-            .create({ data: { name: this.name, timezone: this.timezone } })
+            .create({ data: { name: this.name } })
             .catch((err) => {
                 throw PrismaException.createException(err, "Country");
             });
