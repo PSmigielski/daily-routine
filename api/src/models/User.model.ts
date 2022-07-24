@@ -8,12 +8,14 @@ class User extends Model {
     private plainPassword: string;
     private email: string;
     private countryId: string;
-    constructor(email: string, login: string, plainPassword: string, countryId:string) {
+    private timezoneId: string;
+    constructor(email: string, login: string, plainPassword: string, countryId:string, timezoneId: string) {
         super();
         this.email = email;
         this.login = login;
         this.plainPassword = plainPassword;
         this.countryId = countryId;
+        this.timezoneId = timezoneId
     }
     private static createPasswordHash(password: string) {
         const salt = randomBytes(32).toString("hex"); //2chars at one byte
@@ -31,7 +33,8 @@ class User extends Model {
                     email: this.email,
                     login: this.login,
                     password: User.createPasswordHash(this.plainPassword),
-                    countryId: this.countryId
+                    countryId: this.countryId,
+                    timezoneId: this.timezoneId
                 },
             })
             .catch((err) => {

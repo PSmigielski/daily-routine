@@ -1,5 +1,5 @@
 interface ITimezone{
-    name: string,
+    id: string,
     gmtOffset: number,
     countryId: string
 }

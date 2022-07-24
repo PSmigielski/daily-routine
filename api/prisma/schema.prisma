@@ -20,7 +20,7 @@ model User {
   countryId            String                 @db.Char(2)
   country              Country                @relation(fields: [countryId], references: [id])
   timezone             Timezone               @relation(fields: [timezoneId], references: [id], onDelete: NoAction)
-  timezoneId           String                 @db.Uuid
+  timezoneId           String                 @db.VarChar(100)
 }
 model Country {
   id               String   @id @db.Char(2)
@@ -29,8 +29,7 @@ model Country {
   timezone         Timezone[]
 }
 model Timezone {
-  id              String   @id @db.Uuid @default(uuid())
-  name            String   @unique @db.VarChar(100)
+  id              String   @id @db.VarChar(100)
   gmtOffset       Float    @db.DoublePrecision
   country         Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
   countryId       String   @db.Char(2)
@@ -39,7 +38,7 @@ model Timezone {
 
 model Task {
   id               String   @id @default(uuid()) @db.Uuid
-  name             String   @db.VarChar(255)
+  name             String   @db.VarChar(255) 
   description      String?  @db.Text
   hasSubtasks      Boolean  @db.Boolean @default(false)
   createdAt        DateTime 

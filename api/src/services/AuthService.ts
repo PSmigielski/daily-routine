@@ -11,8 +11,8 @@ import ResetPasswordRequest from "../models/ResetPasswordRequest.model";
 import ILoginData from "../types/ILoginData";
 
 class AuthService extends Service {
-    public async createAccount(email: string, login: string, password: string, countryId: string) {
-        const user = new User(email, login, password, countryId);
+    public async createAccount(email: string, login: string, password: string, countryId: string, timezoneId:string) {
+        const user = new User(email, login, password, countryId, timezoneId);
         const data = await user.createUser().catch(this.throwError);
         if (data) {
             const request = await new VerifyRequest(data.id)
@@ -162,7 +162,7 @@ class AuthService extends Service {
         }
     }
     private async updateLocation(){
-        
+
     }
 }
 

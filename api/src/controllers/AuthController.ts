@@ -6,6 +6,7 @@ import ipinfo from "../middleware/ipinfoMiddleware";
 import schemaValidator from "../middleware/schemaValidator";
 import User from "../models/User.model";
 import AuthService from "../services/AuthService";
+import IIpData from "../types/IIpData";
 import { Methods } from "../types/Methods";
 import Controller from "./Controller";
 class AuthController extends Controller {
@@ -94,9 +95,16 @@ class AuthController extends Controller {
     ];
 
     public async register(req: Request, res: Response, next: NextFunction) {
-        const { email, login, password, countryId } = req.body;
+        const { email, login, password } = req.body;
+        const ipData = req.ipData;
         const data = await new AuthService()
-            .createAccount(email, login, password, countryId)
+            .createAccount(
+                email,
+                login,
+                password,
+                ipData?.country as string,
+                ipData?.timezone as string,
+            )
             .catch(next);
         if (data) {
             return res.status(201).json(data);

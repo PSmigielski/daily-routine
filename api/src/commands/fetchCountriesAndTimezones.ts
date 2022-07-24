@@ -19,7 +19,7 @@ const fetchData = async () =>{
         array.forEach((el: Element) => {
             let info = el.children;
             const country = { id: "", name: ""}
-            const timezone = { name: "", gmtOffset: 0, countryId: ""}
+            const timezone = { id: "", gmtOffset: 0, countryId: ""}
             let infoArr = [...info as HTMLCollection];
             infoArr.forEach((el,idx) => {
                 switch(idx){
@@ -28,10 +28,9 @@ const fetchData = async () =>{
                         timezone.countryId = el.innerHTML;
                     case 1:
                         country.name = el.innerHTML;
-                        
                         break;
                     case 2:
-                        timezone.name = el.children[0].innerHTML;
+                        timezone.id = el.children[0].innerHTML;
                         break;
                     case 3:
                         let offset = el.innerHTML.slice(4).trim().replace(":", ".").replace("+", "")
@@ -51,20 +50,12 @@ const fetchData = async () =>{
     ).map((name) => {
         return data[1].find((c: ICountry) => c.name === name);
     });
-     const timezones: ITimezone[] = Array.from(
-         new Set(data[0].map((c: ICountry) => c.name)),
-     ).map((name) => {
-         return data[0].find((c: ITimezone) => c.name === name);
-     }) as ITimezone[];
+    const timezones: ITimezone[] = Array.from(
+        new Set(data[0].map((c: ITimezone) => c.id))
+    ).map((id) => {
+        return data[0].find((c:ITimezone) => c.id === id );
+    });
     const countryObj = await new CountryService().createMany(countries as Array<ICountry>).catch(err=>{throw err});
-    //const countriesFromDb = await new CountryService().getCountries().catch(err => {throw err}) as Country[];
-    // timezones.forEach((timezone) => {
-    //     countriesFromDb.forEach((country: Country) => {
-    //         if(country.name == timezone?.countryId){
-    //             timezone.countryId = country.id
-    //         }
-    //     })
-    // })
     await new TimezoneService().createMany(timezones).catch(err => {throw err});
     console.log("data has been fetched");
 }
