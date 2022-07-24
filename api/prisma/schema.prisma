@@ -19,6 +19,8 @@ model User {
   ResetPasswordRequest ResetPasswordRequest[]
   countryId            String                 @db.Char(2)
   country              Country                @relation(fields: [countryId], references: [id])
+  timezone             Timezone               @relation(fields: [timezoneId], references: [id], onDelete: NoAction)
+  timezoneId           String                 @db.Uuid
 }
 model Country {
   id               String   @id @db.Char(2)
@@ -32,6 +34,7 @@ model Timezone {
   gmtOffset       Float    @db.DoublePrecision
   country         Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
   countryId       String   @db.Char(2)
+  user            User[]
 }
 
 model Task {

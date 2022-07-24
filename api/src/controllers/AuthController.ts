@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import checkJwt from "../middleware/checkJwt";
 import checkUuid from "../middleware/checkUuid";
+import ipinfo from "../middleware/ipinfoMiddleware";
 import schemaValidator from "../middleware/schemaValidator";
 import User from "../models/User.model";
 import AuthService from "../services/AuthService";
@@ -19,6 +20,7 @@ class AuthController extends Controller {
             handler: this.login,
             localMiddleware: [
                 schemaValidator("/../../schemas/login.schema.json"),
+                ipinfo,
             ],
         },
         {
@@ -27,13 +29,14 @@ class AuthController extends Controller {
             handler: this.register,
             localMiddleware: [
                 schemaValidator("/../../schemas/register.schema.json"),
+                ipinfo,
             ],
         },
         {
             path: "/logout",
             method: Methods.POST,
             handler: this.logout,
-            localMiddleware: [checkJwt],
+            localMiddleware: [checkJwt, ipinfo],
         },
         {
             path: "/verify/:requestId",
@@ -45,7 +48,7 @@ class AuthController extends Controller {
             path: "/refresh",
             method: Methods.POST,
             handler: this.refreshBearerToken,
-            localMiddleware: [],
+            localMiddleware: [ipinfo],
         },
         {
             path: "/forget",
@@ -86,10 +89,8 @@ class AuthController extends Controller {
             path: "/account",
             method: Methods.DELETE,
             handler: this.removeAccount,
-            localMiddleware: [
-                checkJwt
-            ],
-        }
+            localMiddleware: [checkJwt],
+        },
     ];
 
     public async register(req: Request, res: Response, next: NextFunction) {

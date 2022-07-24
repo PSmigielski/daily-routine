@@ -161,7 +161,9 @@ class AuthService extends Service {
             return true;
         }
     }
-    
+    private async updateLocation(){
+        
+    }
 }
 
 export default AuthService;
