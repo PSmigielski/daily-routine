@@ -8,6 +8,7 @@ import Service from "./Service";
 import jwt from "jsonwebtoken";
 import IUser from "../types/IUser";
 import ResetPasswordRequest from "../models/ResetPasswordRequest.model";
+import ILoginData from "../types/ILoginData";
 
 class AuthService extends Service {
     public async createAccount(email: string, login: string, password: string, countryId: string) {
@@ -29,13 +30,7 @@ class AuthService extends Service {
         const keyBuffer = Buffer.from(key, "hex");
         return timingSafeEqual(hashedBuffer, keyBuffer);
     }
-    public async login({
-        login,
-        password
-    }: {
-        login: string;
-        password: string;
-    }) {
+    public async login({login,password}: ILoginData) {
         const user = await User.getUserByLogin(login).catch(this.throwError);
         if (!user) {
             throw new ApiErrorException("Wrong credentials", 403);
@@ -166,6 +161,7 @@ class AuthService extends Service {
             return true;
         }
     }
+    
 }
 
 export default AuthService;
