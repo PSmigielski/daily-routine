@@ -2,6 +2,7 @@ import { randomBytes, scryptSync } from "crypto";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import Model from "./Model";
 import PrismaException from '../exceptions/PrismaException';
+import { time } from "console";
 
 class User extends Model {
     private login: string;
@@ -81,6 +82,14 @@ class User extends Model {
             .findUnique({
                 where: { email },
             })
+            .catch((err) => {
+                throw PrismaException.createException(err, "User");
+            });
+        return user;
+    }
+    public static async updateLocation(country: string, timezone: string, userId: string){
+        const user =await this.prisma.user
+            .update({ where: { id: userId }, data: { countryId: country, timezoneId: timezone } })
             .catch((err) => {
                 throw PrismaException.createException(err, "User");
             });

@@ -113,7 +113,7 @@ class AuthController extends Controller {
     public async login(req: Request, res: Response, next: NextFunction) {
         const { login, password } = req.body;
         const result = await new AuthService()
-            .login({ login, password })
+            .login({ login, password }, req.ipData as IIpData)
             .catch(next);
         if (result) {
             const tokenExp: Date = new Date();
@@ -144,7 +144,7 @@ class AuthController extends Controller {
     }
     public async logout(req: Request, res: Response, next: NextFunction) {
         const result = await new AuthService()
-            .logout(req.user?.refTokenId)
+            .logout(req.user?.refTokenId, req.ipData as IIpData)
             .catch(next);
         if (result) {
             req.user = undefined;
@@ -162,7 +162,7 @@ class AuthController extends Controller {
     ) {
         if (req.cookies.REFRESH_TOKEN != undefined) {
             const newToken = await new AuthService()
-                .refreshBearerToken(req.cookies.REFRESH_TOKEN.token)
+                .refreshBearerToken(req.cookies.REFRESH_TOKEN.token, req.ipData as IIpData)
                 .catch(next);
             if (newToken !== undefined) {
                 const tokenExp: Date = new Date();
