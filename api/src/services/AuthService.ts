@@ -176,7 +176,6 @@ class AuthService extends Service {
     }
     private async updateLocation(ipData: IIpData, userId: string){
         const user = await User.updateLocation(ipData.country as string, ipData.timezone as string , userId).catch(this.throwError);
-        console.log("update loc", ipData);
         if(user){
             return user;
         }
