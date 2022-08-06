@@ -1,4 +1,4 @@
-import { nil } from "ajv";
+import { nil, str } from "ajv";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import PrismaException from "../exceptions/PrismaException";
 import paginationService from "../services/paginationService";
@@ -198,6 +198,8 @@ class Task extends Model{
                     await Task.markTaskAsUndone(taskId).catch((err) => {
                         throw PrismaException.createException(err, "Task");
                     });
+                }else{
+                    await Task.resetStreak(taskId);
                 }
                 return await Task.markAllSubtaskAsUndone(taskId).catch((err) => {
                     throw PrismaException.createException(err, "Task");
@@ -220,12 +222,34 @@ class Task extends Model{
             });
         return data;
     }
+    private static async increaseStreak(id: string, streak: number){
+        const data = await this.prisma.task
+            .update({ where: { id }, data: { streak: streak + 1 } })
+            .catch((err) => {
+                throw PrismaException.createException(err, "Task");
+            });
+        return data;
+    }
+    private static async resetStreak(id: string){
+        const data = await this.prisma.task
+            .update({ where: { id }, data: { streak: 0} })
+            .catch((err) => {
+                throw PrismaException.createException(err, "Task");
+            });
+        return data;
+    }
     private static async markTaskAsUndone(taskId: string){
-        const subtask = await this.prisma.task.update({
+        const task = await this.getTaskById(taskId).catch(err => {throw err;});
+        if(task.isDone){
+            this.increaseStreak(taskId, task.streak)
+        }else{
+            this.resetStreak(taskId);
+        }
+        const updatedTask = await this.prisma.task.update({
             where: {id: taskId},
             data: {isDone: false, completedAt: undefined, lastRepetition: new Date()}
         }).catch(err => { throw PrismaException.createException(err,"Task") });
-        return subtask;
+        return updatedTask;
     }
     public static async markTaskAsDoneOrUndone(taskId: string, userId: string, areAllSubtaskDone: boolean = false){
         if(await Task.checkOwnerOfTheTask(taskId, userId)){
