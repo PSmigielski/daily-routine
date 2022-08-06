@@ -7,11 +7,15 @@ class User extends Model {
     private login: string;
     private plainPassword: string;
     private email: string;
-    constructor(email: string, login: string, plainPassword: string) {
+    private countryId: string;
+    private timezoneId: string;
+    constructor(email: string, login: string, plainPassword: string, countryId:string, timezoneId: string) {
         super();
         this.email = email;
         this.login = login;
         this.plainPassword = plainPassword;
+        this.countryId = countryId;
+        this.timezoneId = timezoneId
     }
     private static createPasswordHash(password: string) {
         const salt = randomBytes(32).toString("hex"); //2chars at one byte
@@ -29,6 +33,8 @@ class User extends Model {
                     email: this.email,
                     login: this.login,
                     password: User.createPasswordHash(this.plainPassword),
+                    countryId: this.countryId,
+                    timezoneId: this.timezoneId
                 },
             })
             .catch((err) => {
@@ -46,10 +52,26 @@ class User extends Model {
                 throw PrismaException.createException(err, "User");
             });
     }
+    public static async getUsersFromTimezones(hour: number){
+        const timezones = await this.prisma.$queryRawUnsafe(
+            `select id  from "Timezone" t group by t.id having (SELECT FLOOR(t2."gmtOffset")+${hour} FROM "Timezone" t2 where t.id = t2.id) = 0 or (SELECT FLOOR(t2."gmtOffset")+${hour} FROM "Timezone" t2 where t.id = t2.id) = 24`,
+        ) as Array<{id: string}>;
+        const timezoneArr: Array<string> = [];
+        timezones.forEach(el => timezoneArr.push(Object.values(el)[0]))
+        const users = await this.prisma.user
+            .findMany({
+                select: { id: true, email: true, timezone: true },
+                where: { timezoneId: { in: timezoneArr } },
+            })
+            .catch((err) => {
+                throw PrismaException.createException(err, "User");
+            });
+        return users;
+    }
     public static async getUserById(userId: string) {
         if (userId) {
             const user = await this.prisma.user
-                .findUnique({
+                .findUnique({ 
                     where: { id: userId },
                 })
                 .catch((err) => {
@@ -75,6 +97,14 @@ class User extends Model {
             .findUnique({
                 where: { email },
             })
+            .catch((err) => {
+                throw PrismaException.createException(err, "User");
+            });
+        return user;
+    }
+    public static async updateLocation(country: string, timezone: string, userId: string){
+        const user =await this.prisma.user
+            .update({ where: { id: userId }, data: { countryId: country, timezoneId: timezone } })
             .catch((err) => {
                 throw PrismaException.createException(err, "User");
             });

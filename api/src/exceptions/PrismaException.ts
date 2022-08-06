@@ -45,6 +45,7 @@ class PrismaException extends Error {
                         break;
                     case "P2003":
                         this.statusCode = 409;
+                        console.log(this);
                         errorMessage = `Foreign key constraint failed`;
                         break;
                     case "P2025":

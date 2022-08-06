@@ -69,7 +69,7 @@ class Subtask extends Model{
         .catch(err => { throw PrismaException.createException(err,"Subtask") })
         return removedSubtask;
     }
-    private static async checkIfAllSubtaskAreDone(taskId: string){   
+    public static async checkIfAllSubtaskAreDone(taskId: string){   
         const allSubtasksInTaskCount = await this.prisma.subtask.count({where: {taskId}})
         .catch(err => { throw PrismaException.createException(err,"Subtask") });
         const allDoneSubtaskInTaskCount = await this.prisma.subtask.count({where: {taskId, isDone: true}})

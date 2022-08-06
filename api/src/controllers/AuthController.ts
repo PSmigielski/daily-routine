@@ -2,9 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import checkJwt from "../middleware/checkJwt";
 import checkUuid from "../middleware/checkUuid";
+import ipinfo from "../middleware/ipinfoMiddleware";
 import schemaValidator from "../middleware/schemaValidator";
 import User from "../models/User.model";
 import AuthService from "../services/AuthService";
+import IIpData from "../types/IIpData";
 import { Methods } from "../types/Methods";
 import Controller from "./Controller";
 class AuthController extends Controller {
@@ -19,6 +21,7 @@ class AuthController extends Controller {
             handler: this.login,
             localMiddleware: [
                 schemaValidator("/../../schemas/login.schema.json"),
+                ipinfo,
             ],
         },
         {
@@ -27,13 +30,14 @@ class AuthController extends Controller {
             handler: this.register,
             localMiddleware: [
                 schemaValidator("/../../schemas/register.schema.json"),
+                ipinfo,
             ],
         },
         {
             path: "/logout",
             method: Methods.POST,
             handler: this.logout,
-            localMiddleware: [checkJwt],
+            localMiddleware: [checkJwt, ipinfo],
         },
         {
             path: "/verify/:requestId",
@@ -45,7 +49,7 @@ class AuthController extends Controller {
             path: "/refresh",
             method: Methods.POST,
             handler: this.refreshBearerToken,
-            localMiddleware: [],
+            localMiddleware: [ipinfo],
         },
         {
             path: "/forget",
@@ -86,16 +90,21 @@ class AuthController extends Controller {
             path: "/account",
             method: Methods.DELETE,
             handler: this.removeAccount,
-            localMiddleware: [
-                checkJwt
-            ],
-        }
+            localMiddleware: [checkJwt],
+        },
     ];
 
     public async register(req: Request, res: Response, next: NextFunction) {
         const { email, login, password } = req.body;
+        const ipData = req.ipData;
         const data = await new AuthService()
-            .createAccount(email, login, password)
+            .createAccount(
+                email,
+                login,
+                password,
+                ipData?.country as string,
+                ipData?.timezone as string,
+            )
             .catch(next);
         if (data) {
             return res.status(201).json(data);
@@ -104,7 +113,7 @@ class AuthController extends Controller {
     public async login(req: Request, res: Response, next: NextFunction) {
         const { login, password } = req.body;
         const result = await new AuthService()
-            .login({ login, password })
+            .login({ login, password }, req.ipData as IIpData)
             .catch(next);
         if (result) {
             const tokenExp: Date = new Date();
@@ -135,7 +144,7 @@ class AuthController extends Controller {
     }
     public async logout(req: Request, res: Response, next: NextFunction) {
         const result = await new AuthService()
-            .logout(req.user?.refTokenId)
+            .logout(req.user?.refTokenId, req.ipData as IIpData)
             .catch(next);
         if (result) {
             req.user = undefined;
@@ -153,7 +162,7 @@ class AuthController extends Controller {
     ) {
         if (req.cookies.REFRESH_TOKEN != undefined) {
             const newToken = await new AuthService()
-                .refreshBearerToken(req.cookies.REFRESH_TOKEN.token)
+                .refreshBearerToken(req.cookies.REFRESH_TOKEN.token, req.ipData as IIpData)
                 .catch(next);
             if (newToken !== undefined) {
                 const tokenExp: Date = new Date();

@@ -8,10 +8,12 @@ import Service from "./Service";
 import jwt from "jsonwebtoken";
 import IUser from "../types/IUser";
 import ResetPasswordRequest from "../models/ResetPasswordRequest.model";
+import ILoginData from "../types/ILoginData";
+import IIpData from "../types/IIpData";
 
 class AuthService extends Service {
-    public async createAccount(email: string, login: string, password: string) {
-        const user = new User(email, login, password);
+    public async createAccount(email: string, login: string, password: string, countryId: string, timezoneId:string) {
+        const user = new User(email, login, password, countryId, timezoneId);
         const data = await user.createUser().catch(this.throwError);
         if (data) {
             const request = await new VerifyRequest(data.id)
@@ -29,13 +31,7 @@ class AuthService extends Service {
         const keyBuffer = Buffer.from(key, "hex");
         return timingSafeEqual(hashedBuffer, keyBuffer);
     }
-    public async login({
-        login,
-        password
-    }: {
-        login: string;
-        password: string;
-    }) {
+    public async login({login,password}: ILoginData, ipData: IIpData) {
         const user = await User.getUserByLogin(login).catch(this.throwError);
         if (!user) {
             throw new ApiErrorException("Wrong credentials", 403);
@@ -62,13 +58,16 @@ class AuthService extends Service {
             typeof tokenData != "string" &&
             typeof refreshTokenData != "string"
         ) {
-            return {
-                jwt: { token, exp: tokenData?.exp },
-                refreshToken: {
-                    token: refreshToken.token,
-                    exp: refreshTokenData?.exp,
-                },
-            };
+            const res = await this.updateLocation(ipData, user.id);
+            if(res){
+                return {
+                    jwt: { token, exp: tokenData?.exp },
+                    refreshToken: {
+                        token: refreshToken.token,
+                        exp: refreshTokenData?.exp,
+                    },
+                };
+            }
         }
     }
     public async verify(id: string) {
@@ -86,7 +85,7 @@ class AuthService extends Service {
             );
         }
     }
-    public async refreshBearerToken(token: string) {
+    public async refreshBearerToken(token: string, ipData: IIpData) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
         if (typeof decoded != "string") {
             const refTokens = await RefreshToken.getTokens(decoded.id).catch(
@@ -108,14 +107,23 @@ class AuthService extends Service {
                     );
                     const tokenData = jwt.decode(newToken);
                     if (typeof tokenData != "string") {
-                        return { token: newToken, exp: tokenData?.exp };
+                        const res = await this.updateLocation(ipData as IIpData, refToken.userId)
+                        if(res){
+                            return { token: newToken, exp: tokenData?.exp };
+                        }
                     }
                 }
             }
         }
     }
-    public async logout(refTokenId: string) {
+    public async logout(refTokenId: string, ipData?: IIpData | undefined) {
         const refToken = await RefreshToken.deleteToken(refTokenId);
+        if(ipData){
+            const res = await this.updateLocation(ipData, refToken.userId);
+            if(res){
+                return true;
+            }
+        }
         return true;
     }
     public async sendResetRequest(email: string) {
@@ -164,6 +172,12 @@ class AuthService extends Service {
             }
             await User.updatePassword(newPassword ,userId).catch(this.throwError);
             return true;
+        }
+    }
+    private async updateLocation(ipData: IIpData, userId: string){
+        const user = await User.updateLocation(ipData.country as string, ipData.timezone as string , userId).catch(this.throwError);
+        if(user){
+            return user;
         }
     }
 }
