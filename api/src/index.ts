@@ -1,11 +1,21 @@
-import express, { Express } from "express";
+import { json } from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-dotenv.config();
-const app: Express = express();
-app.use(express.json());
-app.use(cors());
-app.get("/v1/api", (req, res) => {
-    res.json({ hello: "world" })
-});
-app.listen(process.env.PORT, () => console.log(`api is running at localhost:${process.env.PORT}`));
+import cookieParser from "cookie-parser";
+import Server from "./config/Server";
+import AuthController from "./controllers/AuthController";
+import prismaErrorHandler from "./middleware/prismaErrorHandler";
+import errorHandler from "./middleware/errorHandler";
+import SubtaskController from "./controllers/SubtaskController";
+import TaskController from "./controllers/TaskController";
+import CountryController from "./controllers/CountryController";
+
+const controllers = [
+    new AuthController(),
+    new SubtaskController(),
+    new TaskController(),
+    new CountryController()
+];
+const globalMiddleware = [cookieParser(), json(), cors({ credentials: true, origin: process.env.FRONTEND_URL })];
+const errorHandlers = [prismaErrorHandler, errorHandler];
+
+new Server(controllers, globalMiddleware, errorHandlers).startServer();

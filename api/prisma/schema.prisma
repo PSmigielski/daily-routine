@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,18 +8,75 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid()) @db.Uuid
-  login    String @unique @db.VarChar(100)
-  password String @db.Text
-  email    String @unique @db.VarChar(100)
-  tasks    Task[]
+  id                   String                 @id @default(uuid()) @db.Uuid
+  login                String                 @unique @db.VarChar(100)
+  password             String                 @db.Text
+  email                String                 @unique @db.VarChar(100)
+  tasks                Task[]
+  isVerified           Boolean                @default(false)
+  VerifyRequest        VerifyRequest?
+  RefreshToken         RefreshToken[]
+  ResetPasswordRequest ResetPasswordRequest[]
+  countryId            String                 @db.Char(2)
+  country              Country                @relation(fields: [countryId], references: [id])
+  timezone             Timezone               @relation(fields: [timezoneId], references: [id], onDelete: NoAction)
+  timezoneId           String                 @db.VarChar(100)
+}
+model Country {
+  id               String   @id @db.Char(2)
+  name             String   @db.VarChar(56)
+  user             User[]
+  timezone         Timezone[]
+}
+model Timezone {
+  id              String   @id @db.VarChar(100)
+  gmtOffset       Float    @db.DoublePrecision
+  country         Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  countryId       String   @db.Char(2)
+  user            User[]
 }
 
 model Task {
   id               String   @id @default(uuid()) @db.Uuid
-  task_name        String   @db.VarChar(255)
-  task_description String?  @db.Text
-  createdAt        DateTime
-  author           User     @relation(fields: [authorId], references: [id])
+  name             String   @db.VarChar(255) 
+  description      String?  @db.Text
+  hasSubtasks      Boolean  @db.Boolean @default(false)
+  createdAt        DateTime 
+  lastRepetition   DateTime?
+  repeatEvery      Int      @db.Integer @default(0)
+  completedAt      DateTime?
+  isDone           Boolean @db.Boolean @default(false)
+  author           User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   authorId         String   @db.Uuid
+  Subtasks         Subtask[]
+  streak           Int      @db.Integer @default(0)
+}
+
+model Subtask{
+  id               String @id @default(uuid()) @db.Uuid
+  name             String   @db.VarChar(255)
+  createdAt        DateTime 
+  completedAt      DateTime?
+  isDone           Boolean @db.Boolean @default(false)
+  task             Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId           String   @db.Uuid
+}
+
+model VerifyRequest {
+  id     String @id @default(uuid()) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @db.Uuid
+}
+
+model ResetPasswordRequest {
+  id     String @id @default(uuid()) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique @db.Uuid
+}
+
+model RefreshToken {
+  id     String @id @default(uuid()) @db.Uuid
+  token  String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
 }

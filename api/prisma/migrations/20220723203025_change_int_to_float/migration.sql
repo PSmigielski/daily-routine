@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Timezone" ALTER COLUMN "gmtOffset" SET DATA TYPE DOUBLE PRECISION;
