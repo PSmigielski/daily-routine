@@ -6,7 +6,7 @@ class ResetUserTasks {
     public async setup(){
         cron.schedule("0 * * * *", async ()=>{
             const time = new Date();
-            const users = await User.getUsersFromTimezones(time.getHours()-1);
+            const users = await User.getUsersFromTimezones(time.getHours() === 0 ? 0 : time.getHours()-1);
             users.forEach(async (el) => {
                 const tasks = await Task.getRepeatingTasksForUser(el.id).catch(err => { throw err });
                 if(tasks){
@@ -15,7 +15,7 @@ class ResetUserTasks {
                     });
                 }
             })
-        },{scheduled: true}).start();
+        },{ scheduled: true }).start();
     }
 }
 
