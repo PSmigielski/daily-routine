@@ -8,6 +8,8 @@ import express, {
 
 import dotenv from "dotenv";
 import Controller from "../controllers/Controller";
+import User from "../models/User.model";
+import ResetUserTasks from "../cronTasks/ResetUserTasks";
 
 class Server {
     private app: Express;
@@ -42,6 +44,7 @@ class Server {
         this.setupMiddleware();
         this.setupControllers();
         this.setupErrorHandling();
+        this.setupCronTasks();
     }
     private setupControllers() {
         this.controllers.forEach((controller) => {
@@ -63,6 +66,9 @@ class Server {
     }
     public getApp() {
         return this.app;
+    }
+    public async setupCronTasks(){
+        await new ResetUserTasks().setup();
     }
     public startServer() {
         this.app.listen(process.env.PORT, () =>

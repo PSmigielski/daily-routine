@@ -1,7 +1,9 @@
+import { nil } from "ajv";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import PrismaException from "../exceptions/PrismaException";
 import paginationService from "../services/paginationService";
 import Model from "./Model";
+import Subtask from "./Subtask.model";
 
 class Task extends Model{
     private name: string;
@@ -153,24 +155,75 @@ class Task extends Model{
         }).catch(err => { throw PrismaException.createException(err,"Task") })
         return updatedTask;
     }
-    private static async resetTask(taskId:string){
-        if(await Task.checkIfTaskHasSubtasks(taskId)){
-            return await Task.markAllSubtaskAsUndone(taskId);
+    public static async getRepeatingTasksForUser(userId: string){
+        const tasks = await this.prisma.task
+            .findMany({
+                where: {
+                    authorId: userId,
+                    repeatEvery: { not: undefined },
+                },
+            })
+            .catch((err) => {
+                throw PrismaException.createException(err, "Task");
+            });
+        if(tasks) return tasks;
+    }
+    private static async getResetDate(taskId: string){
+        const task = await this.prisma.task
+            .findUnique({
+                where: { id: taskId },
+                select: { repeatEvery: true, completedAt:true, lastRepetition: true },
+            })
+            .catch((err) => {
+                throw PrismaException.createException(err, "Task");
+            });
+        task?.lastRepetition?.setHours(0, 0, 0, 0);
+        const resetDate = task?.lastRepetition
+        const modifiedDate = resetDate;
+        modifiedDate?.setDate(modifiedDate.getDate()+(task?.repeatEvery as number))
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if((modifiedDate as Date)<=today){
+            return today.toDateString();
         }else{
-            return await Task.markTaskAsUndone(taskId)
+            return null;
+        }
+    }
+    public static async resetTask(taskId:string){
+        const today = new Date().toDateString();
+        const resetDay = await this.getResetDate(taskId);
+        if(today == resetDay){
+            if(await Task.checkIfTaskHasSubtasks(taskId)){
+                if (await Subtask.checkIfAllSubtaskAreDone(taskId)){
+                    await Task.markTaskAsUndone(taskId).catch((err) => {
+                        throw PrismaException.createException(err, "Task");
+                    });
+                }
+                return await Task.markAllSubtaskAsUndone(taskId).catch((err) => {
+                    throw PrismaException.createException(err, "Task");
+                });
+            }else{
+                return await Task.markTaskAsUndone(taskId).catch((err) => {
+                    throw PrismaException.createException(err, "Task");
+                });
+            }
         }
     }
     private static async markAllSubtaskAsUndone(taskId: string){
-        const data = await this.prisma.subtask.updateMany({
-            where: {taskId},
-            data: {isDone: false}
-        })
+        const data = await this.prisma.subtask
+            .updateMany({
+                where: { taskId },
+                data: { isDone: false, completedAt: null },
+            })
+            .catch((err) => {
+                throw PrismaException.createException(err, "Task");
+            });
         return data;
     }
     private static async markTaskAsUndone(taskId: string){
         const subtask = await this.prisma.task.update({
             where: {id: taskId},
-            data: {isDone: false}
+            data: {isDone: false, completedAt: undefined, lastRepetition: new Date()}
         }).catch(err => { throw PrismaException.createException(err,"Task") });
         return subtask;
     }

@@ -10,7 +10,6 @@ class TimezoneService extends Service{
         const timezone = Timezone.create(data).catch(this.throwError);
         return timezone;
     }
-    
 }
 
 export default TimezoneService

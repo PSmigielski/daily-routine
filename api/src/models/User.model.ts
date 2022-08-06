@@ -2,7 +2,6 @@ import { randomBytes, scryptSync } from "crypto";
 import ApiErrorException from "../exceptions/ApiErrorException";
 import Model from "./Model";
 import PrismaException from '../exceptions/PrismaException';
-import { time } from "console";
 
 class User extends Model {
     private login: string;
@@ -53,10 +52,26 @@ class User extends Model {
                 throw PrismaException.createException(err, "User");
             });
     }
+    public static async getUsersFromTimezones(hour: number){
+        const timezones = await this.prisma.$queryRawUnsafe(
+            `select id  from "Timezone" t group by t.id having (SELECT FLOOR(t2."gmtOffset")+${hour} FROM "Timezone" t2 where t.id = t2.id) = 0 or (SELECT FLOOR(t2."gmtOffset")+${hour} FROM "Timezone" t2 where t.id = t2.id) = 24`,
+        ) as Array<{id: string}>;
+        const timezoneArr: Array<string> = [];
+        timezones.forEach(el => timezoneArr.push(Object.values(el)[0]))
+        const users = await this.prisma.user
+            .findMany({
+                select: { id: true, email: true, timezone: true },
+                where: { timezoneId: { in: timezoneArr } },
+            })
+            .catch((err) => {
+                throw PrismaException.createException(err, "User");
+            });
+        return users;
+    }
     public static async getUserById(userId: string) {
         if (userId) {
             const user = await this.prisma.user
-                .findUnique({
+                .findUnique({ 
                     where: { id: userId },
                 })
                 .catch((err) => {
