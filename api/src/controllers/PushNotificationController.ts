@@ -14,14 +14,15 @@ class PushNotificationController extends Controller {
             handler: this.create,
             localMiddleware: [checkJwt],
         },
+        {
+            path: "",
+            method: Methods.DELETE,
+            handler: this.remove,
+            localMiddleware: [checkJwt],
+        },
     ];
     public constructor() {
         super();
-        webpush.setVapidDetails(
-            `mailto:${process.env.APP_EMAIL as string}`,
-            process.env.VAPID_PUBLIC_KEY as string,
-            process.env.VAPID_PRIVATE_KEY as string,
-        );
     }
     public async create(req: Request, res: Response, next: NextFunction) {
         const subscription = req.body;
@@ -39,7 +40,17 @@ class PushNotificationController extends Controller {
                 .status(201)
                 .json({ message: "subscription has been created" });
         }
-
+    }
+    public async remove(req: Request, res: Response, next: NextFunction) {
+        const endpoint = req.body.endpoint;
+        const subscriptionEntity = await Subscription.remove(endpoint).catch(
+            next,
+        );
+        if (subscriptionEntity) {
+            return res
+                .status(200)
+                .json({ message: "subscription has been removed" });
+        }
     }
 }
 

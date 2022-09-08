@@ -32,6 +32,16 @@ class Subscription extends Model{
             return subscription;
         }
     }
+    public static async remove(endpoint:string){
+        const subscription = await this.prisma.subscription
+            .delete({ where: { endpoint } })
+            .catch((err) => {
+                throw PrismaException.createException(err, "Subscription");
+            });
+        if(subscription){
+            return subscription;
+        }
+    }
 }
 
 export default Subscription;
