@@ -27,7 +27,9 @@ model Subscription{
   id                   String   @id @db.Uuid @default(uuid())
   userId               String   @db.Uuid
   user                 User     @relation(fields: [userId], references: [id])
-  subscriptionData     Json
+  endpoint             String   @db.VarChar(255) @unique
+  expirationTime       DateTime 
+  keys                 Json
 }
 model Country {
   id               String   @id @db.Char(2)
