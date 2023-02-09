@@ -1,7 +1,7 @@
 import React from "react";
 
-const Input = ({value, setValue, error, info}) => {
-    return <input value={value} onChange={(e) => setValue(e.target.value)} />;
+const Input = ({value, handleChange, handleBlur}) => {
+    return <input value={value} onChange={handleChange} onBlur={handleBlur} />;
 }
 
 export default Input;

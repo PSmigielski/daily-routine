@@ -1,17 +1,39 @@
-import React from 'react';
+import React, {useState} from 'react';
 import Logo from '../components/atoms/Logo';
-import useInput from '../hooks/useInput';
-import ContextAwareInput from '../components/molecules/ContextAwareInput';
-import AuthForm from "../components/organism/AuthForm";
+import {ErrorMessage, Field, Form, Formik} from "formik";
+import axios from "axios";
 
 function App() {
-  const [state, setState, error,,,] = useInput("", "")
+    const api = axios.create({
+        baseURL: "http://localhost:4000/v1/api",
+        withCredentials: true
+    });
+  const [loggedIn, setLoggedIn] = useState(false);
   return (
     <div className="App">
-        <AuthForm header={"Log in"}>
-            <ContextAwareInput value={state} setValue={setState} error={error} info="test"/>
-        </AuthForm>
         <Logo />
+        <Formik initialValues={{login: '', password: ''}}
+                onSubmit={(values) => {
+                    api.post("/auth/login", values)
+                        .then(data => setLoggedIn(true)).catch(e => console.log(e))
+                }}
+                validate={values => {
+                    const errors = {};
+                    if (!values.login) errors.login = 'Required';
+                    if(!values.password) errors.password = 'Required';
+                    return errors;
+                }}>
+            { loggedIn ?
+                (<div>dupa</div>) :
+                (<Form>
+                    <Field type={"text"} name={"login"}/>
+                    <ErrorMessage name="login" component="div" />
+                    <Field type={"password"} name={"password"}/>
+                    <ErrorMessage name="password" component="div" />
+                    <button type="submit">Submit</button>
+                </Form>)
+            }
+        </Formik>
     </div>
   );
 }
