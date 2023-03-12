@@ -21,6 +21,15 @@ model User {
   country              Country                @relation(fields: [countryId], references: [id])
   timezone             Timezone               @relation(fields: [timezoneId], references: [id], onDelete: NoAction)
   timezoneId           String                 @db.VarChar(100)
+  subsctiptions        Subscription[]
+}
+model Subscription{
+  id                   String   @id @db.Uuid @default(uuid())
+  userId               String   @db.Uuid
+  user                 User     @relation(fields: [userId], references: [id])
+  endpoint             String   @db.VarChar(255) @unique
+  expirationTime       DateTime 
+  keys                 Json
 }
 model Country {
   id               String   @id @db.Char(2)
