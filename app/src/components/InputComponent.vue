@@ -24,8 +24,7 @@ export default {
   },
   methods: {
     handleChange(e) {
-      console.log('asdasd');
-      this.$emit('input', e.target.value);
+      this.$emit(`inp`, e);
     },
   },
 };

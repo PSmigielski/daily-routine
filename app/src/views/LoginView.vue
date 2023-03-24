@@ -5,13 +5,20 @@
             type: 'text',
             placeholder: 'Email',
             name: 'login',
-            required: true,
+            required: true
           },
           {
             type: 'password',
             placeholder: 'Hasło',
             name: 'password',
-            required: true,
+            required: true
+          },
+        ]"
+    :buttonData="[
+          {
+            type: 'submit',
+            label: 'Log in',
+            style: { backgroundColor: 'red'},
           },
         ]"
     :formData="{
@@ -39,7 +46,7 @@ export default {
   },
   methods: {
     handleSubmit(e) {
-      console.log(e);
+      console.log(e.login);
     },
   },
 };
