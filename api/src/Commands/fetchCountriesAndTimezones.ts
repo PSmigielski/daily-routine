@@ -1,9 +1,9 @@
 import { Country, PrismaClient } from "@prisma/client";
 import puppeteer from "puppeteer";
-import CountryService from "../services/CountryService";
-import TimezoneService from "../services/TimezoneService";
-import ICountry from "../types/ICountry";
-import ITimezone from "../types/ITimezone";
+import CountryService from "../Services/CountryService";
+import TimezoneService from "../Services/TimezoneService";
+import ICountry from "../Types/ICountry";
+import ITimezone from "../Types/ITimezone";
 
 const url = 'https://timezonedb.com/time-zones';
 

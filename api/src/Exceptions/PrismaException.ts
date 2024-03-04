@@ -1,5 +1,5 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
-import PrismaMeta from "../types/Meta";
+import PrismaMeta from "../Types/Meta";
 
 class PrismaException extends Error {
     private statusCode: number;

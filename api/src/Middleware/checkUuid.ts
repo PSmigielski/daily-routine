@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import ApiErrorException from "../exceptions/ApiErrorException";
+import ApiErrorException from "../Exceptions/ApiErrorException";
 
 const checkUuid = (ids: Array<string> | string) => {
     return (req: Request, res: Response, next: NextFunction) => {

@@ -1,13 +1,13 @@
 import { json } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import Server from "./config/Server";
-import AuthController from "./controllers/AuthController";
-import prismaErrorHandler from "./middleware/prismaErrorHandler";
-import errorHandler from "./middleware/errorHandler";
-import SubtaskController from "./controllers/SubtaskController";
-import TaskController from "./controllers/TaskController";
-import CountryController from "./controllers/CountryController";
+import Server from "./Config/Server";
+import AuthController from "./Controllers/AuthController";
+import prismaErrorHandler from "./Middleware/prismaErrorHandler";
+import errorHandler from "./Middleware/errorHandler";
+import SubtaskController from "./Controllers/SubtaskController";
+import TaskController from "./Controllers/TaskController";
+import CountryController from "./Controllers/CountryController";
 
 const controllers = [
     new AuthController(),

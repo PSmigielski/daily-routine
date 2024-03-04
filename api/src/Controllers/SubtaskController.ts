@@ -1,52 +1,18 @@
 import { NextFunction, Request, Response } from "express";
-import Subtask from "../models/Subtask.model";
-import Task from "../models/Task.model";
+import Subtask from "../Models/Subtask.model";
+import Task from "../Models/Task.model";
 import {Task as TaskType, Subtask as SubtaskType} from "@prisma/client";
-import Controller from "./Controller";
-import checkJwt from "../middleware/checkJwt";
-import { Methods } from "../types/Methods";
-import schemaValidator from "../middleware/schemaValidator";
+import checkJwt from "../Middleware/checkJwt";
+import { Methods as MethodsEnum } from "../Types/Methods";
+import schemaValidator from "../Middleware/schemaValidator";
+import { Controller } from "../Decorators/Controller";
+import { Methods } from "../Decorators/Methods";
+import checkUuid from "../Middleware/checkUuid";
 
-class SubtaskController extends Controller {
-    public path = "/subtasks";
-    public routes = [
-        {
-            path: "/:taskId",
-            method: Methods.POST,
-            handler: this.create,
-            localMiddleware: [
-                checkJwt,
-                schemaValidator("/../../schemas/subtask.schema.json"),
-            ],
-        },
-        {
-            path: "/:subtaskId",
-            method: Methods.PUT,
-            handler: this.editSubtask,
-            localMiddleware: [
-                checkJwt,
-                schemaValidator("/../../schemas/subtask.schema.json"),
-            ],
-        },
-        {
-            path: "/:taskId",
-            method: Methods.GET,
-            handler: this.getSubtasks,
-            localMiddleware: [checkJwt],
-        },
-        {
-            path: "/:subtaskId",
-            method: Methods.DELETE,
-            handler: this.removeSubtask,
-            localMiddleware: [checkJwt],
-        },
-        {
-            path: "/mark/:subtaskId",
-            method: Methods.PUT,
-            handler: this.markSubtaskAsDoneOrUndone,
-            localMiddleware: [checkJwt],
-        }
-    ];
+@Controller("/subtasks")
+class SubtaskController {
+
+    @Methods("/:taskId", MethodsEnum.POST, [checkJwt, checkUuid("taskId"), schemaValidator("/../../schemas/subtask.schema.json")])
     public async create(req: Request, res: Response, next: NextFunction) {
         const { name } = req.body;
         const { taskId } = req.params;
@@ -69,6 +35,8 @@ class SubtaskController extends Controller {
             }
         }
     }
+
+    @Methods("/:taskId", MethodsEnum.GET, [checkJwt, checkUuid("taskId")])
     public async getSubtasks(req: Request, res: Response, next: NextFunction) {
         const taskId = req.params.taskId;
         const page = req.query.page
@@ -82,6 +50,8 @@ class SubtaskController extends Controller {
             }
         }
     }
+
+    @Methods("/:subtaskId", MethodsEnum.PUT, [checkJwt, checkUuid("subtaskId"), schemaValidator("/../../schemas/subtask.schema.json")])
     public async editSubtask(req: Request, res: Response, next: NextFunction) {
         const { subtaskId } = req.params;
         const { name } = req.body;
@@ -102,6 +72,7 @@ class SubtaskController extends Controller {
             }
         }
     }
+    @Methods("/:subtaskId", MethodsEnum.DELETE, [checkJwt, checkUuid("subtaskId")])
     public async removeSubtask(
         req: Request,
         res: Response,
@@ -124,6 +95,8 @@ class SubtaskController extends Controller {
             }
         }
     }
+
+    @Methods("/mark/:subtaskId", MethodsEnum.PUT, [checkJwt, checkUuid("subtaskId")])
     public async markSubtaskAsDoneOrUndone(
         req: Request,
         res: Response,

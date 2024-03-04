@@ -1,99 +1,21 @@
 import { NextFunction, Request, Response } from "express";
-import ApiErrorException from "../exceptions/ApiErrorException";
-import checkJwt from "../middleware/checkJwt";
-import checkUuid from "../middleware/checkUuid";
-import ipinfo from "../middleware/ipinfoMiddleware";
-import schemaValidator from "../middleware/schemaValidator";
-import User from "../models/User.model";
-import AuthService from "../services/AuthService";
-import IIpData from "../types/IIpData";
-import { Methods } from "../types/Methods";
-import Controller from "./Controller";
-class AuthController extends Controller {
-    constructor() {
-        super();
-    }
-    public path = "/auth";
-    public routes = [
-        {
-            path: "/login",
-            method: Methods.POST,
-            handler: this.login,
-            localMiddleware: [
-                schemaValidator("/../../schemas/login.schema.json"),
-                ipinfo,
-            ],
-        },
-        {
-            path: "/register",
-            method: Methods.POST,
-            handler: this.register,
-            localMiddleware: [
-                schemaValidator("/../../schemas/register.schema.json"),
-                ipinfo,
-            ],
-        },
-        {
-            path: "/logout",
-            method: Methods.POST,
-            handler: this.logout,
-            localMiddleware: [checkJwt, ipinfo],
-        },
-        {
-            path: "/verify/:requestId",
-            method: Methods.GET,
-            handler: this.verify,
-            localMiddleware: [checkUuid("requestId")],
-        },
-        {
-            path: "/refresh",
-            method: Methods.POST,
-            handler: this.refreshBearerToken,
-            localMiddleware: [ipinfo],
-        },
-        {
-            path: "/forget",
-            method: Methods.POST,
-            handler: this.sendResetRequest,
-            localMiddleware: [
-                schemaValidator("/../../schemas/forget.schema.json"),
-            ],
-        },
-        {
-            path: "/reset/:requestId",
-            method: Methods.PUT,
-            handler: this.reset,
-            localMiddleware: [
-                checkUuid("requestId"),
-                schemaValidator("/../../schemas/reset.schema.json"),
-            ],
-        },
-        {
-            path: "/edit/password",
-            method: Methods.PUT,
-            handler: this.editPassword,
-            localMiddleware: [
-                checkJwt,
-                schemaValidator("/../../schemas/editPassword.schema.json"),
-            ],
-        },
-        {
-            path: "/edit/login",
-            method: Methods.PUT,
-            handler: this.editLogin,
-            localMiddleware: [
-                checkJwt,
-                schemaValidator("/../../schemas/editLogin.schema.json"),
-            ],
-        },
-        {
-            path: "/account",
-            method: Methods.DELETE,
-            handler: this.removeAccount,
-            localMiddleware: [checkJwt],
-        },
-    ];
+import { Controller } from "../Decorators/Controller";
+import { Methods } from "../Decorators/Methods";
+import { Methods as MethodsEnum } from "../Types/Methods";
+import ApiErrorException from "../Exceptions/ApiErrorException";
+import User from "../Models/User.model";
+import AuthService from "../Services/AuthService";
+import IIpData from "../Types/IIpData";
+import schemaValidator from "../Middleware/schemaValidator";
+import ipInfo from "../Middleware/ipinfoMiddleware";
+import checkJwt from "../Middleware/checkJwt";
+import checkUuid from "../Middleware/checkUuid";
 
+
+@Controller("/auth")
+class AuthController {
+
+	@Methods("/register", MethodsEnum.POST, [schemaValidator("/../../schemas/register.schema.json"), ipInfo])
     public async register(req: Request, res: Response, next: NextFunction) {
         const { email, login, password } = req.body;
         const ipData = req.ipData;
@@ -110,6 +32,8 @@ class AuthController extends Controller {
             return res.status(201).json(data);
         }
     }
+    @Methods("/login", MethodsEnum.POST, [schemaValidator("/../../schemas/login.schema.json"), ipInfo])
+    
     public async login(req: Request, res: Response, next: NextFunction) {
         const { login, password } = req.body;
         const result = await new AuthService()
@@ -133,6 +57,8 @@ class AuthController extends Controller {
                 .json({ message: "user logged in" });
         }
     }
+
+    @Methods("/verify/:requestId", MethodsEnum.GET, [checkUuid("requestId")])
     public async verify(req: Request, res: Response, next: NextFunction) {
         const { requestId } = req.params;
         const result = await new AuthService().verify(requestId).catch(next);
@@ -142,6 +68,8 @@ class AuthController extends Controller {
                 .json({ message: "Email has been verified successfully" });
         }
     }
+
+    @Methods("/logout", MethodsEnum.POST, [checkJwt, ipInfo])
     public async logout(req: Request, res: Response, next: NextFunction) {
         const result = await new AuthService()
             .logout(req.user?.refTokenId, req.ipData as IIpData)
@@ -155,6 +83,8 @@ class AuthController extends Controller {
                 .json({ message: "user logged out successfully" });
         }
     }
+
+    @Methods("/refresh", MethodsEnum.POST, [ipInfo])
     public async refreshBearerToken(
         req: Request,
         res: Response,
@@ -179,6 +109,9 @@ class AuthController extends Controller {
             next(new ApiErrorException("REFRESH_TOKEN cookie not found", 401));
         }
     }
+
+    @Methods("/reset/:requestId", MethodsEnum.PUT, [checkUuid("requestId"), schemaValidator("/../../schemas/reset.schema.json")])
+
     public async sendResetRequest(
         req: Request,
         res: Response,
@@ -192,6 +125,7 @@ class AuthController extends Controller {
             return res.json({ message: "reset request has been sent" });
         }
     }
+    @Methods("/forget", MethodsEnum.POST, [schemaValidator("/../../schemas/forget.schema.json")])
     public async reset(req: Request, res: Response, next: NextFunction) {
         const { newPassword } = req.body;
         const { requestId } = req.params;
@@ -202,6 +136,7 @@ class AuthController extends Controller {
             res.json({ message: "Password reset successfully" });
         }
     }
+    @Methods("/edit/login", MethodsEnum.PUT, [checkJwt, schemaValidator("/../../schemas/editLogin.schema.json")])
     public async editLogin(req: Request, res: Response, next: NextFunction) {
         const { login } = req.body;
         const result = await User.updateLogin(login, req.user?.id);
@@ -221,6 +156,8 @@ class AuthController extends Controller {
             }
         }
     }
+
+    @Methods("/edit/password", MethodsEnum.PUT, [checkJwt, schemaValidator("/../../schemas/editPassword.schema.json")])
     public async editPassword(req: Request, res: Response, next: NextFunction) {
         const { password, newPassword } = req.body;
         const result = await new AuthService()
@@ -232,6 +169,8 @@ class AuthController extends Controller {
                 .json({ message: "password updated successfully" });
         }
     }
+
+    @Methods("/account", MethodsEnum.DELETE, [checkJwt])
     public async removeAccount(
         req: Request,
         res: Response,

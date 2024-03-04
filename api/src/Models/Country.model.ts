@@ -1,6 +1,5 @@
-import e from "express";
-import PrismaException from "../exceptions/PrismaException";
-import ICountry from "../types/ICountry";
+import PrismaException from "../Exceptions/PrismaException";
+import ICountry from "../Types/ICountry";
 import Model from "./Model";
 
 class Country extends Model{

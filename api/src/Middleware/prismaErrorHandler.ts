@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import PrismaException from "../exceptions/PrismaException";
+import PrismaException from "../Exceptions/PrismaException";
 
 const prismaErrorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
     if (res.headersSent) {

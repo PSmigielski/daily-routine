@@ -7,9 +7,9 @@ import express, {
 } from "express";
 
 import dotenv from "dotenv";
-import Controller from "../controllers/Controller";
-import User from "../models/User.model";
-import ResetUserTasks from "../cronTasks/ResetUserTasks";
+import Controller from "../Controllers/Controller";
+import ResetUserTasks from "../Commands/ResetUserTasks";
+import { router } from "../Decorators/Controller";
 
 class Server {
     private app: Express;
@@ -42,18 +42,13 @@ class Server {
         this.globalMiddleware = globalMiddleware;
         this.errorHandlers = errorHandlers;
         this.setupMiddleware();
-        this.setupControllers();
+        this.setupRoutes();
         this.setupErrorHandling();
         this.setupCronTasks();
     }
-    private setupControllers() {
-        this.controllers.forEach((controller) => {
-            this.app.use(
-                `${this.pathPrefix}${controller.path}`,
-                controller.setRoutes(),
-            );
-        });
-    }
+	private setupRoutes(){
+		this.app.use(router);
+	}
     private setupMiddleware() {
         this.globalMiddleware.forEach((middleware) => {
             this.app.use(middleware);

@@ -1,6 +1,6 @@
-import User from "../models/User.model";
+import User from "../Models/User.model";
 import cron from "node-cron";
-import Task from "../models/Task.model";
+import Task from "../Models/Task.model";
 
 class ResetUserTasks {
     public async setup(){

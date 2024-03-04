@@ -4,7 +4,7 @@
     },
     "files": [
         "src/index.ts",
-        "src/types/custom.d.ts"
+        "src/Types/custom.d.ts"
     ],
     "compilerOptions": {
         "target": "es2018",
@@ -13,6 +13,7 @@
         "rootDir": "./src",
         "esModuleInterop": true,
         "strict": true,
+    	"experimentalDecorators": true,
         "typeRoots": [
             "src/types",
             "node_modules/@types"

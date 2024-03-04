@@ -2,10 +2,8 @@ import Ajv, { JSONSchemaType, ValidateFunction } from "ajv";
 import { NextFunction, Request, Response } from "express";
 import addFormats from "ajv-formats";
 import fs from "fs";
-import IUser from "../types/IUser";
-import ApiErrorException from "../exceptions/ApiErrorException";
-import validation from "ajv/dist/vocabularies/validation";
-import def from "ajv/dist/vocabularies/applicator/additionalItems";
+import IUser from "../Types/IUser";
+import ApiErrorException from "../Exceptions/ApiErrorException";
 
 const schemaValidator = (pathToSchema: string) => {
     return (req: Request, res: Response, next: NextFunction) => {
@@ -19,34 +17,24 @@ const schemaValidator = (pathToSchema: string) => {
                 switch(validate.errors[0].keyword){
                     case "minimum":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} must be minimum ${validate.errors[0].params.limit}`, 400);
-                    break;
                     case "maximum":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} can be up to ${validate.errors[0].params.limit}`, 400);
-                    break;
                     case "minProperties":
                         throw new ApiErrorException(`${validate.errors[0].params.limit} param/s required`, 400);
-                    break;
                     case "pattern":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} does not match pattern`, 400);
-                    break;
                     case "type":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} has invalid type`, 400);
-                    break;
                     case "required":
                         throw new ApiErrorException(`${validate.errors[0].params.missingProperty} required`, 400);
-                    break;
                     case "additionalProperties":
                         throw new ApiErrorException(`no additional properties allowed`, 400);
-                    break;
                     case "maxLength":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} is too long`, 400);
-                    break;
                     case "minLength":
                         throw new ApiErrorException(`${validate.errors[0].instancePath.substring(1)} is too short`, 400);
-                    break;
                     case "format":
                         throw new ApiErrorException(`must match ${validate.errors[0].params.format} format`, 400);
-                    break;
                     default:
                         throw new ApiErrorException(`Something is wrong with your request`, 500);
                 }
