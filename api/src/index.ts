@@ -10,12 +10,16 @@ import TaskController from "./Controllers/TaskController";
 import CountryController from "./Controllers/CountryController";
 
 const controllers = [
-    new AuthController(),
-    new SubtaskController(),
-    new TaskController(),
-    new CountryController()
+	new AuthController(),
+	new SubtaskController(),
+	new TaskController(),
+	new CountryController(),
 ];
-const globalMiddleware = [cookieParser(), json(), cors({ credentials: true, origin: process.env.FRONTEND_URL })];
+const globalMiddleware = [
+	cookieParser(),
+	json(),
+	cors({ credentials: true, origin: process.env.FRONTEND_URL }),
+];
 const errorHandlers = [prismaErrorHandler, errorHandler];
 
-new Server(controllers, globalMiddleware, errorHandlers).startServer();
+new Server(globalMiddleware, errorHandlers).startServer();
