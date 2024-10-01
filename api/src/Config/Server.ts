@@ -5,8 +5,13 @@ import express, {
 	RequestHandler,
 	Response,
 } from "express";
-
+import "reflect-metadata";
+import Container from "typedi";
 import dotenv from "dotenv";
+import "../Controllers/AuthController";
+import "../Controllers/SubtaskController";
+import "../Controllers/TaskController";
+import "../Controllers/CountryController";
 import ResetUserTasks from "../Commands/ResetUserTasks";
 import { router } from "../Decorators/Controller";
 
@@ -43,7 +48,7 @@ class Server {
 		this.setupCronTasks();
 	}
 	private setupRoutes() {
-		this.app.use(router);
+		this.app.use(this.pathPrefix, router);
 		console.log(router);
 	}
 	private setupMiddleware() {

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { Controller } from "../Decorators/Controller";
 import { Methods } from "../Decorators/Methods";
+import { Controller } from "../Decorators/Controller";
 import { Methods as MethodsEnum } from "../Types/Methods";
 import ApiErrorException from "../Exceptions/ApiErrorException";
 import User from "../Models/User.model";
@@ -10,8 +10,10 @@ import schemaValidator from "../Middleware/schemaValidator";
 import ipInfo from "../Middleware/ipinfoMiddleware";
 import checkJwt from "../Middleware/checkJwt";
 import checkUuid from "../Middleware/checkUuid";
+import { Service } from "typedi";
 
 @Controller("/auth")
+@Service()
 class AuthController {
 	@Methods("/register", MethodsEnum.POST, [
 		schemaValidator("/../../schemas/register.schema.json"),

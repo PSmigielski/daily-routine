@@ -7,8 +7,10 @@ import { Methods as MethodsEnum } from "../Types/Methods";
 import { Controller } from "../Decorators/Controller";
 import { Methods } from "../Decorators/Methods";
 import checkUuid from "../Middleware/checkUuid";
+import { Service } from "typedi";
 
 @Controller("/tasks")
+@Service()
 class TaskController {
 	@Methods("", MethodsEnum.POST, [
 		checkJwt,

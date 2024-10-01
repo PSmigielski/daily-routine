@@ -8,8 +8,10 @@ import schemaValidator from "../Middleware/schemaValidator";
 import { Controller } from "../Decorators/Controller";
 import { Methods } from "../Decorators/Methods";
 import checkUuid from "../Middleware/checkUuid";
+import { Service } from "typedi";
 
 @Controller("/subtasks")
+@Service()
 class SubtaskController {
 	@Methods("/:taskId", MethodsEnum.POST, [
 		checkJwt,

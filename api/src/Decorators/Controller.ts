@@ -7,15 +7,12 @@ export const router = Router();
 
 export const Controller = (prefix: string): ClassDecorator => {
 	return (target: any) => {
-		if (!Container.has(target)) Container.set(target);
-		Reflect.defineMetadata("prefix", prefix, target.constructor);
-		if (!Reflect.hasMetadata("routes", target.constructor)) {
-			Reflect.defineMetadata("routes", [], target.constructor);
+		console.log("created controller");
+		Reflect.defineMetadata("prefix", prefix, target);
+		if (!Reflect.hasMetadata("routes", target)) {
+			Reflect.defineMetadata("routes", [], target);
 		}
-		const routes = Reflect.getMetadata(
-			"routes",
-			target.constructor,
-		) as Array<IRoute>;
+		const routes = Reflect.getMetadata("routes", target) as Array<IRoute>;
 		const instance: any = Container.get(target);
 		routes.forEach((route) => {
 			router[route.method](
