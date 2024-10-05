@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./dist/index.js",
-    "fetchData": "ts-node ./src/commands/fetchCountriesAndTimezones.ts",
+    "fetchData": "ts-node ./src/Commands/fetchCountriesAndTimezones.ts",
     "dev": "nodemon src/index.ts"
   },
   "author": "",

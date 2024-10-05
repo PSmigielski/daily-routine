@@ -1,4 +1,4 @@
-version: '3.3'
+version: "3.3"
 services:
   postgres:
     env_file:
@@ -12,6 +12,11 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
     ports:
-      - '2137:5432'
+      - "2137:5432"
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 1025:1025
+      - 8025:8025
 volumes:
   postgres: null

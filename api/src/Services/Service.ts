@@ -1,7 +1,7 @@
-abstract class Service{
-    protected throwError(err: Error){
-        throw err;
-    }
+abstract class Service {
+  protected throwError(err: Error) {
+    throw err;
+  }
 }
 
-export default Service
+export default Service;
